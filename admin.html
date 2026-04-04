@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Mazamorra La Original</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
+        /* Barra de navegación superior */
+        .navbar { background-color: #1a1a1a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar h1 { margin: 0; font-size: 20px; color: #f5b041; }
+        
+        /* Contenedor principal */
+        .contenedor { padding: 20px; max-width: 1200px; margin: auto; }
+        
+        /* Tarjetas de resumen */
+        .resumen { display: flex; gap: 20px; margin-bottom: 20px; }
+        .tarjeta { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; text-align: center; border-top: 4px solid #f5b041; }
+        .tarjeta h3 { margin: 0 0 10px 0; color: #666; font-size: 14px; text-transform: uppercase; }
+        .tarjeta .numero { font-size: 28px; font-weight: bold; color: #1a1a1a; }
+
+        /* Tabla de pedidos */
+        .panel-tabla { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
+        .panel-header { padding: 15px 20px; background-color: #fff; border-bottom: 1px solid #eee; }
+        .panel-header h2 { margin: 0; font-size: 18px; }
+        
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: #f8f9fa; padding: 12px 15px; font-weight: 600; color: #555; border-bottom: 2px solid #ddd; }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        tr:hover { background-color: #f8f9fa; }
+        
+        /* Etiquetas de estado */
+        .estado { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .estado.pendiente { background-color: #fff3cd; color: #856404; }
+        .estado.entregado { background-color: #d4edda; color: #155724; }
+        
+        /* Botones de acción */
+        .btn-accion { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: background 0.3s; }
+        .btn-entregar { background-color: #28a745; color: white; }
+        .btn-entregar:hover { background-color: #218838; }
+        .btn-entregar:disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <h1>🌽 ERP - Mazamorra La Original</h1>
+        <span>Administrador</span>
+    </div>
+
+    <div class="contenedor">
+        <div class="resumen">
+            <div class="tarjeta">
+                <h3>Total Pedidos (Hoy)</h3>
+                <div class="numero" id="totalPedidos">0</div>
+            </div>
+            <div class="tarjeta">
+                <h3>Bolsas Demandadas (1kg)</h3>
+                <div class="numero" id="totalBolsas">0</div>
+            </div>
+            <div class="tarjeta">
+                <h3>Ollas a Cocinar</h3>
+                <div class="numero" id="totalOllas">0</div>
+            </div>
+        </div>
+
+        <div class="panel-tabla">
+            <div class="panel-header">
+                <h2>📋 Últimos Pedidos B2B</h2>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Negocio</th>
+                        <th>Dirección</th>
+                        <th>Contacto</th>
+                        <th>Bolsas</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTabla">
+                    <tr><td colspan="7" style="text-align: center;">Cargando pedidos en tiempo real...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // Tu configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
+            authDomain: "pedidos-mazamorra.firebaseapp.com",
+            projectId: "pedidos-mazamorra",
+            storageBucket: "pedidos-mazamorra.firebasestorage.app",
+            messagingSenderId: "845900639474",
+            appId: "1:845900639474:web:f2dc79841165e7f991b46b"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Referencia a la tabla (colección) y ordenamos por los más recientes
+        const pedidosRef = collection(db, "pedidos");
+        const consulta = query(pedidosRef, orderBy("fecha", "desc"));
+
+        // onSnapshot escucha la base de datos EN TIEMPO REAL
+        onSnapshot(consulta, (snapshot) => {
+            const cuerpoTabla = document.getElementById('cuerpoTabla');
+            cuerpoTabla.innerHTML = ''; // Limpiamos la tabla
+            
+            let conteoPedidos = 0;
+            let sumaBolsas = 0;
+
+            snapshot.forEach((documento) => {
+                const pedido = documento.data();
+                const id = documento.id;
+                
+                // Cálculos para las tarjetas superiores
+                conteoPedidos++;
+                if (pedido.estado === "Pendiente") {
+                    sumaBolsas += pedido.cantidad_bolsas;
+                }
+
+                // Formatear la fecha para que se lea fácil
+                const fechaFormat = new Date(pedido.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
+
+                // Crear la fila HTML
+                const fila = `
+                    <tr>
+                        <td>${fechaFormat}</td>
+                        <td><strong>${pedido.negocio}</strong></td>
+                        <td>${pedido.direccion}</td>
+                        <td>${pedido.contacto}<br><small>${pedido.telefono}</small></td>
+                        <td><strong>${pedido.cantidad_bolsas}</strong></td>
+                        <td><span class="estado ${pedido.estado === 'Entregado' ? 'entregado' : 'pendiente'}">${pedido.estado}</span></td>
+                        <td>
+                            <button class="btn-accion btn-entregar" 
+                                onclick="marcarEntregado('${id}')" 
+                                ${pedido.estado === 'Entregado' ? 'disabled' : ''}>
+                                ${pedido.estado === 'Entregado' ? 'Completado' : 'Marcar Entregado'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                cuerpoTabla.innerHTML += fila;
+            });
+
+            // Actualizar las tarjetas de resumen
+            document.getElementById('totalPedidos').innerText = conteoPedidos;
+            document.getElementById('totalBolsas').innerText = sumaBolsas;
+            
+            // Lógica de producción: Sabiendo que 1 olla = 160 bolsas
+            const ollasNecesarias = Math.ceil(sumaBolsas / 160);
+            document.getElementById('totalOllas').innerText = ollasNecesarias;
+
+            // Si no hay pedidos
+            if(conteoPedidos === 0) {
+                cuerpoTabla.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay pedidos registrados.</td></tr>';
+            }
+        });
+
+        // Función global para actualizar el estado del pedido en Firebase
+        window.marcarEntregado = async function(idPedido) {
+            if(confirm("¿Confirmas que este pedido ya fue entregado y pagado?")) {
+                const pedidoDoc = doc(db, "pedidos", idPedido);
+                await updateDoc(pedidoDoc, {
+                    estado: "Entregado"
+                });
+            }
+        }
+    </script>
+</body>
+</html>
