@@ -5,35 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedidos - Mazamorra La Original</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: auto; background-color: #f9f9f9; }
-        .contenedor { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { color: #333; text-align: center; }
-        label { font-weight: bold; color: #555; }
-        input, button { width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 20px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
-        button { background-color: #25D366; color: white; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
-        button:hover { background-color: #128C7E; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f0f2f5; margin: 0; }
+        .contenedor { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); max-width: 450px; margin: 20px auto; }
+        h2 { color: #1a1a1a; text-align: center; margin-bottom: 5px; }
+        p.subtitulo { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
+        .grupo-form { margin-bottom: 15px; }
+        label { font-weight: 600; color: #444; font-size: 14px; display: block; margin-bottom: 5px; }
+        input { width: 100%; padding: 12px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; transition: border-color 0.3s; }
+        input:focus { border-color: #f5b041; outline: none; }
+        button { width: 100%; padding: 14px; margin-top: 10px; background-color: #f5b041; color: #333; border: none; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
+        button:hover { background-color: #e6a13c; }
+        .separador { border-bottom: 2px dashed #eee; margin: 20px 0; }
     </style>
 </head>
 <body>
     <div class="contenedor">
-        <h2>Pedir Mazamorra 🌽</h2>
+        <h2>Mazamorra La Original 🌽</h2>
+        <p class="subtitulo">Portal B2B de Pedidos Mayoristas</p>
+        
         <form id="formularioPedido">
-            <label>ID de tu Negocio:</label><br>
-            <input type="text" id="clienteId" placeholder="Ej: TIENDA-01" required><br>
+            <div class="grupo-form">
+                <label>Nombre del Negocio (Tienda/Supermercado):</label>
+                <input type="text" id="nombreNegocio" placeholder="Ej: Supermercado El Ahorro" required>
+            </div>
 
-            <label>Cantidad de Bolsas (1kg):</label><br>
-            <input type="number" id="cantidadBolsas" min="1" placeholder="¿Cuántas necesitas?" required><br>
+            <div class="grupo-form">
+                <label>Nombre del Contacto:</label>
+                <input type="text" id="nombreContacto" placeholder="Tu nombre completo" required>
+            </div>
 
-            <button type="submit" id="btnEnviar">Enviar Pedido y Notificar</button>
+            <div class="grupo-form">
+                <label>Correo Electrónico:</label>
+                <input type="email" id="correo" placeholder="ejemplo@correo.com" required>
+            </div>
+
+            <div class="grupo-form">
+                <label>Teléfono / WhatsApp:</label>
+                <input type="tel" id="telefono" placeholder="Ej: 310..." required>
+            </div>
+
+            <div class="grupo-form">
+                <label>Dirección de Entrega y Ciudad:</label>
+                <input type="text" id="direccion" placeholder="Ej: Calle 12 #34-56, Pereira" required>
+            </div>
+
+            <div class="separador"></div>
+
+            <div class="grupo-form">
+                <label>Cantidad de Bolsas (1kg):</label>
+                <input type="number" id="cantidadBolsas" min="1" placeholder="¿Cuántas necesitas hoy?" required>
+            </div>
+
+            <button type="submit" id="btnEnviar">Confirmar Pedido</button>
         </form>
     </div>
 
     <script type="module">
-        // 1. Importamos las herramientas de Firebase desde internet
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // 2. Tu configuración exacta de Firebase
+        // ⚠️ REEMPLAZA ESTO CON TUS LLAVES DE FIREBASE (Las de apiKey, authDomain, etc.)
         const firebaseConfig = {
             apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
             authDomain: "pedidos-mazamorra.firebaseapp.com",
@@ -43,42 +74,49 @@
             appId: "1:845900639474:web:f2dc79841165e7f991b46b"
         };
 
-        // 3. Inicializamos Firebase y la Base de Datos
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // 4. Lógica al enviar el formulario
         document.getElementById('formularioPedido').addEventListener('submit', async function(e) {
             e.preventDefault(); 
             
-            const idCliente = document.getElementById('clienteId').value;
+            // Capturamos TODOS los datos nuevos
+            const negocio = document.getElementById('nombreNegocio').value;
+            const contacto = document.getElementById('nombreContacto').value;
+            const correo = document.getElementById('correo').value;
+            const telefono = document.getElementById('telefono').value;
+            const direccion = document.getElementById('direccion').value;
             const cantidad = parseInt(document.getElementById('cantidadBolsas').value);
-            const boton = document.getElementById('btnEnviar');
             
-            boton.innerText = "Guardando pedido...";
+            const boton = document.getElementById('btnEnviar');
+            boton.innerText = "Procesando...";
             boton.style.backgroundColor = "#ccc";
 
             try {
-                // AQUÍ ESTÁ EL CAMBIO: Guardamos en Firebase Firestore
+                // Guardamos un perfil de datos mucho más completo en la base de datos
                 await addDoc(collection(db, "pedidos"), {
-                    cliente_id: idCliente,
+                    negocio: negocio,
+                    contacto: contacto,
+                    correo: correo,
+                    telefono: telefono,
+                    direccion: direccion,
                     cantidad_bolsas: cantidad,
                     fecha: new Date().toISOString(),
                     estado: "Pendiente"
                 });
 
-                // ⚠️ REEMPLAZA ESTO: Pon el número real de WhatsApp de Mazamorra La Original (con el código de país 57)
+                // El mensaje de WhatsApp ahora es un resumen profesional
                 const numeroEmpresa = "573108420470"; 
-                const mensaje = `Hola, acabo de registrar un pedido en el sistema por ${cantidad} bolsas de mazamorra. Mi ID de negocio es: ${idCliente}.`;
+                const mensaje = `🌽 *NUEVO PEDIDO - MAZAMORRA LA ORIGINAL* 🌽\n\n*Negocio:* ${negocio}\n*Contacto:* ${contacto}\n*Dirección:* ${direccion}\n*Teléfono:* ${telefono}\n\n*Pedido:* ${cantidad} Bolsas (1kg)`;
                 const urlWhatsapp = `https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensaje)}`;
                 
                 window.location.href = urlWhatsapp; 
 
             } catch (error) {
                 console.error("Error al guardar en Firebase:", error);
-                alert("Hubo un error al guardar el pedido. Revisa la consola.");
-                boton.innerText = "Enviar Pedido y Notificar";
-                boton.style.backgroundColor = "#25D366";
+                alert("Hubo un error al guardar el pedido. Intenta de nuevo.");
+                boton.innerText = "Confirmar Pedido";
+                boton.style.backgroundColor = "#f5b041";
             }
         });
     </script>
