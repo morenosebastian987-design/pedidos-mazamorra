@@ -222,12 +222,12 @@
 
         // ⚠️ REEMPLAZA CON TUS LLAVES DE FIREBASE ⚠️
         const firebaseConfig = {
-                    apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
-                    authDomain: "pedidos-mazamorra.firebaseapp.com",
-                    projectId: "pedidos-mazamorra",
-                    storageBucket: "pedidos-mazamorra.firebasestorage.app",
-                    messagingSenderId: "845900639474",
-                    appId: "1:845900639474:web:f2dc79841165e7f991b46b"
+          apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
+         authDomain: "pedidos-mazamorra.firebaseapp.com",
+        projectId: "pedidos-mazamorra",
+        storageBucket: "pedidos-mazamorra.firebasestorage.app",
+        messagingSenderId: "845900639474",
+        appId: "1:845900639474:web:f2dc79841165e7f991b46b"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -333,4 +333,95 @@
         document.getElementById('formAjuste').addEventListener('submit', async (e) => {
             e.preventDefault();
             // Sobrescribimos la base de datos con los valores exactos digitados
-            await updateDoc(refInventario, {
+            await updateDoc(refInventario, { 
+                maiz_kg: parseFloat(document.getElementById('ajusteMaiz').value), 
+                bolsas_unidades: parseInt(document.getElementById('ajusteBolsas').value),
+                soda_kg: parseFloat(document.getElementById('ajusteSoda').value)
+            });
+            modalAjuste.style.display = 'none';
+        });
+
+        // --- LÓGICA: COCINA ---
+        const modalCocina = document.getElementById('modalCocina');
+        document.getElementById('btnAbrirModalCocina').addEventListener('click', () => modalCocina.style.display = 'flex');
+        document.getElementById('btnCerrarModalCocina').addEventListener('click', () => modalCocina.style.display = 'none');
+
+        document.getElementById('formCocina').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const ollas = parseInt(document.getElementById('ollasCocinadas').value);
+            
+            // FÓRMULA DE PRODUCCIÓN (Cambia los números aquí si gastan diferente)
+            const gastoMaiz = ollas * 25;
+            const gastoBolsas = ollas * 160;
+            const gastoSoda = ollas * 0.5; // ⬅️ Asumí medio kilo por olla, cámbialo si es necesario
+
+            if(confirm(`Se descontarán ${gastoMaiz}kg maíz, ${gastoBolsas} bolsas y ${gastoSoda}kg soda. ¿Confirmar?`)) {
+                await updateDoc(refInventario, { 
+                    maiz_kg: increment(-gastoMaiz), 
+                    bolsas_unidades: increment(-gastoBolsas),
+                    soda_kg: increment(-gastoSoda)
+                });
+                modalCocina.style.display = 'none';
+                document.getElementById('formCocina').reset();
+            }
+        });
+
+        // --- LÓGICA DE PEDIDOS ---
+        const modalPedido = document.getElementById('modalNuevoPedido');
+        document.getElementById('btnAbrirModal').addEventListener('click', () => modalPedido.style.display = 'flex');
+        document.getElementById('btnCerrarModal').addEventListener('click', () => modalPedido.style.display = 'none');
+
+        document.getElementById('formManual').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await addDoc(collection(db, "pedidos"), {
+                negocio: document.getElementById('manualNegocio').value, contacto: document.getElementById('manualContacto').value || "N/A",
+                correo: "Pedido Telefónico", telefono: document.getElementById('manualTelefono').value,
+                direccion: document.getElementById('manualDireccion').value, cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value),
+                fecha: new Date().toISOString(), estado: "Pendiente"
+            });
+            modalPedido.style.display = 'none';
+            document.getElementById('formManual').reset();
+        });
+
+        function cargarDatos() {
+            onSnapshot(query(collection(db, "pedidos"), orderBy("fecha", "desc")), (snapshot) => {
+                const cuerpoTabla = document.getElementById('cuerpoTabla');
+                cuerpoTabla.innerHTML = ''; 
+                let conteoPedidos = 0, sumaBolsas = 0;
+
+                snapshot.forEach((doc) => {
+                    const p = doc.data();
+                    conteoPedidos++;
+                    if (p.estado === "Pendiente") sumaBolsas += p.cantidad_bolsas;
+                    
+                    const fechaF = new Date(p.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
+                    let clase = p.estado === 'Entregado' ? 'entregado' : p.estado === 'Cancelado' ? 'cancelado' : 'pendiente';
+                    let icono = p.correo === "Pedido Telefónico" ? "📞 " : (p.origen === "Excel" ? "📊 " : "🌐 ");
+
+                    cuerpoTabla.innerHTML += `<tr>
+                        <td><small>${fechaF}</small></td>
+                        <td><strong>${icono}${p.negocio || 'N/A'}</strong></td>
+                        <td>${p.direccion || 'N/A'}</td>
+                        <td>${p.contacto || 'N/A'}<br><small>${p.telefono || ''}</small></td>
+                        <td><strong>${p.cantidad_bolsas}</strong></td>
+                        <td><span class="estado ${clase}">${p.estado}</span></td>
+                        <td><div class="acciones-grid">
+                            <button class="btn-accion btn-entregar" onclick="cambiarEstado('${doc.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
+                            <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${doc.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
+                            <button class="btn-accion btn-borrar" onclick="borrarPedido('${doc.id}')">🗑️</button>
+                        </div></td>
+                    </tr>`;
+                });
+
+                document.getElementById('totalPedidos').innerText = conteoPedidos;
+                document.getElementById('totalBolsas').innerText = sumaBolsas;
+                document.getElementById('totalOllas').innerText = Math.ceil(sumaBolsas / 160);
+                if(conteoPedidos === 0) cuerpoTabla.innerHTML = '<tr><td colspan="7" style="text-align: center;">Sin pedidos.</td></tr>';
+            });
+        }
+
+        window.cambiarEstado = async (id, estado) => { if(confirm(`¿Confirmar ${estado}?`)) await updateDoc(doc(db, "pedidos", id), { estado }); }
+        window.borrarPedido = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "pedidos", id)); }
+    </script>
+</body>
+</html>
