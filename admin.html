@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Privado - Mazamorra La Original</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
         
@@ -21,52 +24,60 @@
         .navbar { background-color: #1a1a1a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .navbar h1 { margin: 0; font-size: 20px; color: #f5b041; }
         .btn-salir { background: transparent; border: 1px solid #f5b041; color: #f5b041; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .btn-salir:hover { background: #f5b041; color: #1a1a1a; }
         
         .contenedor { padding: 20px; max-width: 1200px; margin: auto; }
+        
+        /* INVENTARIO */
+        .seccion-titulo { margin: 20px 0 10px 0; font-size: 18px; color: #444; display: flex; justify-content: space-between; align-items: center; }
+        .resumen-inventario { display: flex; gap: 15px; margin-bottom: 25px; }
+        .tarjeta-inv { background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #17a2b8; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .tarjeta-inv h3 { margin: 0 0 5px 0; font-size: 12px; color: #666; text-transform: uppercase; }
+        .tarjeta-inv .numero { font-size: 24px; font-weight: bold; color: #333; }
+        .alerta-roja { color: #dc3545 !important; }
+        .btn-produccion { background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+
+        /* RESUMEN PEDIDOS */
         .resumen { display: flex; gap: 20px; margin-bottom: 20px; }
         .tarjeta { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; text-align: center; border-top: 4px solid #f5b041; }
         .tarjeta h3 { margin: 0 0 10px 0; color: #666; font-size: 14px; text-transform: uppercase; }
         .tarjeta .numero { font-size: 28px; font-weight: bold; color: #1a1a1a; }
 
+        /* TABLA PEDIDOS */
         .panel-tabla { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
         .panel-header { padding: 15px 20px; background-color: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;}
         .panel-header h2 { margin: 0; font-size: 18px; }
         
+        /* BOTONES NUEVOS */
+        .grupo-botones-header { display: flex; gap: 10px; }
         .btn-nuevo { background-color: #f5b041; color: #1a1a1a; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        .btn-nuevo:hover { background-color: #e6a13c; }
+        .btn-importar { background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-importar:hover { background-color: #218838; }
 
-        table { width: 100%; border-collapse: collapse; text-align: left; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
         th { background-color: #f8f9fa; padding: 12px 15px; font-weight: 600; color: #555; border-bottom: 2px solid #ddd; }
         td { padding: 12px 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
         tr:hover { background-color: #f8f9fa; }
         
-        .estado { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .estado { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
         .estado.pendiente { background-color: #fff3cd; color: #856404; }
         .estado.entregado { background-color: #d4edda; color: #155724; }
         .estado.cancelado { background-color: #f8d7da; color: #721c24; }
-        .estado.manual { background-color: #cce5ff; color: #004085; } /* Color especial para saber que fue por teléfono */
         
         .acciones-grid { display: flex; gap: 5px; flex-wrap: wrap; }
-        .btn-accion { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: background 0.3s; color: white; }
+        .btn-accion { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; color: white; }
         .btn-entregar { background-color: #28a745; }
-        .btn-entregar:hover:not(:disabled) { background-color: #218838; }
         .btn-cancelar { background-color: #fd7e14; }
-        .btn-cancelar:hover:not(:disabled) { background-color: #e85e0c; }
         .btn-borrar { background-color: #dc3545; }
-        .btn-borrar:hover { background-color: #c82333; }
         .btn-accion:disabled { background-color: #ccc; cursor: not-allowed; color: #666; }
 
-        /* ESTILOS DEL MODAL (Ventana Emergente) */
+        /* MODALES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
         .modal-contenido { background-color: #fff; padding: 25px; border-radius: 10px; width: 100%; max-width: 400px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .cerrar { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; }
-        .cerrar:hover { color: #333; }
         .grupo-form { margin-bottom: 15px; }
         .grupo-form label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555; }
         .grupo-form input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .btn-guardar-manual { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 15px; }
-        .btn-guardar-manual:hover { background-color: #218838; }
+        .btn-guardar-manual { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -74,7 +85,6 @@
     <div id="pantalla-login">
         <div class="caja-login">
             <h2>🌽 Acceso Restringido</h2>
-            <p style="color:#ccc; font-size:14px;">Ingresa tus credenciales de administrador</p>
             <input type="email" id="email" placeholder="Correo electrónico">
             <input type="password" id="password" placeholder="Contraseña">
             <button id="btnIngresar">Iniciar Sesión</button>
@@ -92,25 +102,40 @@
         </div>
 
         <div class="contenedor">
+            
+            <div class="seccion-titulo">
+                <strong>📦 Bodega de Insumos</strong>
+                <button class="btn-produccion" id="btnAbrirModalCocina">🍲 Registrar Producción</button>
+            </div>
+            <div class="resumen-inventario">
+                <div class="tarjeta-inv">
+                    <h3>Maíz Amarillo (Kg)</h3>
+                    <div class="numero" id="invMaiz">Cargando...</div>
+                </div>
+                <div class="tarjeta-inv">
+                    <h3>Bolsas Zenner (Und)</h3>
+                    <div class="numero" id="invBolsas">Cargando...</div>
+                </div>
+            </div>
+
+            <div class="seccion-titulo"><strong>📊 Demanda del Día</strong></div>
             <div class="resumen">
-                <div class="tarjeta">
-                    <h3>Total Pedidos (Hoy)</h3>
-                    <div class="numero" id="totalPedidos">0</div>
-                </div>
-                <div class="tarjeta">
-                    <h3>Bolsas Pendientes</h3>
-                    <div class="numero" id="totalBolsas">0</div>
-                </div>
-                <div class="tarjeta">
-                    <h3>Ollas a Cocinar</h3>
-                    <div class="numero" id="totalOllas">0</div>
-                </div>
+                <div class="tarjeta"><h3>Pedidos Hoy</h3><div class="numero" id="totalPedidos">0</div></div>
+                <div class="tarjeta"><h3>Bolsas Pendientes</h3><div class="numero" id="totalBolsas">0</div></div>
+                <div class="tarjeta"><h3>Ollas a Cocinar</h3><div class="numero" id="totalOllas">0</div></div>
             </div>
 
             <div class="panel-tabla">
                 <div class="panel-header">
-                    <h2>📋 Gestión de Pedidos B2B</h2>
-                    <button class="btn-nuevo" id="btnAbrirModal">+ Nuevo Pedido Manual</button>
+                    <h2>📋 Rutas y Despachos</h2>
+                    
+                    <div class="grupo-botones-header">
+                        <input type="file" id="inputExcel" accept=".xlsx, .xls" style="display: none;">
+                        <button class="btn-importar" id="btnImportarExcel">📥 Importar Excel</button>
+                        
+                        <button class="btn-nuevo" id="btnAbrirModal">+ Pedido Telefónico</button>
+                    </div>
+
                 </div>
                 <table>
                     <thead>
@@ -125,7 +150,7 @@
                         </tr>
                     </thead>
                     <tbody id="cuerpoTabla">
-                        <tr><td colspan="7" style="text-align: center;">Cargando pedidos...</td></tr>
+                        <tr><td colspan="7" style="text-align: center;">Cargando...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -135,40 +160,39 @@
     <div id="modalNuevoPedido" class="modal">
         <div class="modal-contenido">
             <span class="cerrar" id="btnCerrarModal">&times;</span>
-            <h2 style="margin-top: 0; color: #333;">📞 Pedido Telefónico</h2>
+            <h2>📞 Pedido Telefónico</h2>
             <form id="formManual">
+                <div class="grupo-form"><label>Negocio:</label><input type="text" id="manualNegocio" required></div>
+                <div class="grupo-form"><label>Contacto:</label><input type="text" id="manualContacto"></div>
+                <div class="grupo-form"><label>Teléfono:</label><input type="tel" id="manualTelefono" required></div>
+                <div class="grupo-form"><label>Dirección:</label><input type="text" id="manualDireccion" required></div>
+                <div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div>
+                <button type="submit" class="btn-guardar-manual">Guardar Pedido</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalCocina" class="modal">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalCocina">&times;</span>
+            <h2>🍲 Registrar Producción</h2>
+            <p style="font-size: 13px; color: #666;">Descuento automático de inventario (Maíz y Bolsas).</p>
+            <form id="formCocina">
                 <div class="grupo-form">
-                    <label>Negocio o Tienda:</label>
-                    <input type="text" id="manualNegocio" required placeholder="Ej: Tienda Don José">
+                    <label>¿Cuántas ollas se cocinaron hoy?</label>
+                    <input type="number" id="ollasCocinadas" required min="1" value="1">
                 </div>
-                <div class="grupo-form">
-                    <label>Contacto (Quien llamó):</label>
-                    <input type="text" id="manualContacto" placeholder="Nombre de la persona (Opcional)">
-                </div>
-                <div class="grupo-form">
-                    <label>Teléfono:</label>
-                    <input type="tel" id="manualTelefono" required placeholder="Ej: 310...">
-                </div>
-                <div class="grupo-form">
-                    <label>Dirección de Entrega:</label>
-                    <input type="text" id="manualDireccion" required placeholder="Calle, Barrio...">
-                </div>
-                <div class="grupo-form">
-                    <label>Cantidad de Bolsas:</label>
-                    <input type="number" id="manualBolsas" required min="1" placeholder="¿Cuántas?">
-                </div>
-                <button type="submit" class="btn-guardar-manual" id="btnGuardarManual">Guardar Pedido</button>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Confirmar y Descontar Insumos</button>
             </form>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        // IMPORTANTE: Agregamos addDoc para poder inyectar pedidos manualmente
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // ⚠️ REEMPLAZA ESTO CON TUS LLAVES DE FIREBASE ⚠️
+        // ⚠️ REEMPLAZA CON TUS LLAVES ⚠️
         const firebaseConfig = {
                 apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
                 authDomain: "pedidos-mazamorra.firebaseapp.com",
@@ -176,19 +200,20 @@
                 storageBucket: "pedidos-mazamorra.firebasestorage.app",
                 messagingSenderId: "845900639474",
                 appId: "1:845900639474:web:f2dc79841165e7f991b46b"
-                        };
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app); 
 
-        // --- LÓGICA DE SEGURIDAD ---
+        // --- SEGURIDAD ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('pantalla-login').style.display = 'none';
                 document.getElementById('pantalla-dashboard').style.display = 'block';
                 document.getElementById('correo-usuario').innerText = user.email;
                 cargarDatos(); 
+                cargarInventario(); 
             } else {
                 document.getElementById('pantalla-login').style.display = 'flex';
                 document.getElementById('pantalla-dashboard').style.display = 'none';
@@ -196,122 +221,179 @@
         });
 
         document.getElementById('btnIngresar').addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
-            const msjError = document.getElementById('mensaje-error');
-            signInWithEmailAndPassword(auth, email, pass)
-                .then(() => { msjError.style.display = 'none'; }) 
-                .catch(() => { msjError.style.display = 'block'; }); 
+            signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
+                .then(() => { document.getElementById('mensaje-error').style.display = 'none'; }) 
+                .catch(() => { document.getElementById('mensaje-error').style.display = 'block'; }); 
         });
-
         document.getElementById('btnSalir').addEventListener('click', () => { signOut(auth); });
 
-        // --- LÓGICA DEL MODAL (PEDIDO MANUAL) ---
-        const modal = document.getElementById('modalNuevoPedido');
-        const btnAbrirModal = document.getElementById('btnAbrirModal');
-        const btnCerrarModal = document.getElementById('btnCerrarModal');
-        const formManual = document.getElementById('formManual');
+        // --- LÓGICA DE IMPORTAR EXCEL (NUEVO) ---
+        const btnImportarExcel = document.getElementById('btnImportarExcel');
+        const inputExcel = document.getElementById('inputExcel');
 
-        // Abrir ventana
-        btnAbrirModal.addEventListener('click', () => { modal.style.display = 'flex'; });
-        // Cerrar ventana
-        btnCerrarModal.addEventListener('click', () => { modal.style.display = 'none'; formManual.reset(); });
-        // Cerrar si hace clic fuera de la ventana
-        window.addEventListener('click', (e) => { if (e.target === modal) { modal.style.display = 'none'; formManual.reset(); } });
+        // 1. Al dar clic al botón, abrimos la ventana oculta para seleccionar el archivo
+        btnImportarExcel.addEventListener('click', () => {
+            inputExcel.click();
+        });
 
-        // Guardar el pedido manual en Firebase
-        formManual.addEventListener('submit', async (e) => {
+        // 2. Cuando el usuario selecciona un archivo, hacemos la magia
+        inputExcel.addEventListener('change', (e) => {
+            const archivo = e.target.files[0];
+            if (!archivo) return;
+
+            btnImportarExcel.innerText = '⏳ Procesando...';
+            btnImportarExcel.disabled = true;
+
+            const lector = new FileReader();
+            lector.onload = async (evento) => {
+                try {
+                    // Leemos el archivo con la librería SheetJS
+                    const data = new Uint8Array(evento.target.result);
+                    const libroDeTrabajo = window.XLSX.read(data, {type: 'array'});
+                    
+                    // Tomamos la primera hoja del Excel
+                    const nombrePrimeraHoja = libroDeTrabajo.SheetNames[0];
+                    const hoja = libroDeTrabajo.Sheets[nombrePrimeraHoja];
+                    
+                    // Convertimos la hoja a un formato que Javascript entienda (JSON)
+                    const filasJson = window.XLSX.utils.sheet_to_json(hoja);
+
+                    let subidos = 0;
+
+                    // Recorremos cada fila del Excel y la enviamos a Firebase
+                    for (let fila of filasJson) {
+                        if (fila.Negocio && fila.Cantidad) { // Solo subimos si tiene los datos mínimos
+                            await addDoc(collection(db, "pedidos"), {
+                                negocio: fila.Negocio,
+                                contacto: fila.Contacto || "N/A",
+                                correo: "Importado de Excel", // Etiqueta especial
+                                telefono: fila.Telefono || "N/A",
+                                direccion: fila.Direccion || "N/A",
+                                cantidad_bolsas: parseInt(fila.Cantidad),
+                                fecha: new Date().toISOString(),
+                                estado: "Pendiente",
+                                origen: "Excel"
+                            });
+                            subidos++;
+                        }
+                    }
+
+                    alert(`✅ ¡Éxito! Se importaron ${subidos} pedidos desde el Excel.`);
+                } catch (error) {
+                    console.error("Error leyendo Excel:", error);
+                    alert("Hubo un error al leer el archivo. Verifica que las columnas estén correctas.");
+                } finally {
+                    btnImportarExcel.innerText = '📥 Importar Excel';
+                    btnImportarExcel.disabled = false;
+                    inputExcel.value = ""; // Limpiamos el input
+                }
+            };
+            
+            lector.readAsArrayBuffer(archivo);
+        });
+
+
+        // --- LÓGICA DE INVENTARIO ---
+        const refInventario = doc(db, "bodega", "insumos_principales");
+
+        async function cargarInventario() {
+            onSnapshot(refInventario, async (docSnap) => {
+                if (docSnap.exists()) {
+                    const datos = docSnap.data();
+                    const maizElem = document.getElementById('invMaiz');
+                    const bolsasElem = document.getElementById('invBolsas');
+                    
+                    maizElem.innerText = datos.maiz_kg;
+                    bolsasElem.innerText = datos.bolsas_unidades;
+
+                    maizElem.classList.toggle('alerta-roja', datos.maiz_kg < 50);
+                    bolsasElem.classList.toggle('alerta-roja', datos.bolsas_unidades < 500);
+                } else {
+                    await setDoc(refInventario, { maiz_kg: 500, bolsas_unidades: 3000 });
+                }
+            });
+        }
+
+        const modalCocina = document.getElementById('modalCocina');
+        document.getElementById('btnAbrirModalCocina').addEventListener('click', () => modalCocina.style.display = 'flex');
+        document.getElementById('btnCerrarModalCocina').addEventListener('click', () => modalCocina.style.display = 'none');
+
+        document.getElementById('formCocina').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btnGuardar = document.getElementById('btnGuardarManual');
-            btnGuardar.innerText = 'Guardando...';
-            btnGuardar.disabled = true;
+            const ollas = parseInt(document.getElementById('ollasCocinadas').value);
+            const gastoMaiz = ollas * 25;
+            const gastoBolsas = ollas * 160;
 
-            try {
-                await addDoc(collection(db, "pedidos"), {
-                    negocio: document.getElementById('manualNegocio').value,
-                    contacto: document.getElementById('manualContacto').value || "No especificado",
-                    correo: "Pedido Telefónico", // Etiqueta especial
-                    telefono: document.getElementById('manualTelefono').value,
-                    direccion: document.getElementById('manualDireccion').value,
-                    cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value),
-                    fecha: new Date().toISOString(),
-                    estado: "Pendiente",
-                    origen: "Manual" // Para estadísticas futuras
-                });
-                
-                modal.style.display = 'none';
-                formManual.reset();
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Hubo un error al guardar el pedido.");
-            } finally {
-                btnGuardar.innerText = 'Guardar Pedido';
-                btnGuardar.disabled = false;
+            if(confirm(`Se van a descontar ${gastoMaiz}kg de maíz y ${gastoBolsas} bolsas. ¿Confirmar producción?`)) {
+                await updateDoc(refInventario, { maiz_kg: increment(-gastoMaiz), bolsas_unidades: increment(-gastoBolsas) });
+                modalCocina.style.display = 'none';
+                document.getElementById('formCocina').reset();
             }
         });
 
 
-        // --- LÓGICA DE DATOS Y TABLA ---
-        function cargarDatos() {
-            const pedidosRef = collection(db, "pedidos");
-            const consulta = query(pedidosRef, orderBy("fecha", "desc"));
+        // --- LÓGICA DE PEDIDOS Y TABLA ---
+        const modalPedido = document.getElementById('modalNuevoPedido');
+        document.getElementById('btnAbrirModal').addEventListener('click', () => modalPedido.style.display = 'flex');
+        document.getElementById('btnCerrarModal').addEventListener('click', () => modalPedido.style.display = 'none');
 
-            onSnapshot(consulta, (snapshot) => {
+        document.getElementById('formManual').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await addDoc(collection(db, "pedidos"), {
+                negocio: document.getElementById('manualNegocio').value,
+                contacto: document.getElementById('manualContacto').value || "N/A",
+                correo: "Pedido Telefónico",
+                telefono: document.getElementById('manualTelefono').value,
+                direccion: document.getElementById('manualDireccion').value,
+                cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value),
+                fecha: new Date().toISOString(),
+                estado: "Pendiente"
+            });
+            modalPedido.style.display = 'none';
+            document.getElementById('formManual').reset();
+        });
+
+        function cargarDatos() {
+            onSnapshot(query(collection(db, "pedidos"), orderBy("fecha", "desc")), (snapshot) => {
                 const cuerpoTabla = document.getElementById('cuerpoTabla');
                 cuerpoTabla.innerHTML = ''; 
                 let conteoPedidos = 0, sumaBolsas = 0;
 
-                snapshot.forEach((documento) => {
-                    const pedido = documento.data();
-                    const id = documento.id;
-                    
+                snapshot.forEach((doc) => {
+                    const p = doc.data();
                     conteoPedidos++;
-                    if (pedido.estado === "Pendiente") { sumaBolsas += pedido.cantidad_bolsas; }
-
-                    const fechaFormat = new Date(pedido.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
-
-                    let claseColor = 'pendiente';
-                    if(pedido.estado === 'Entregado') claseColor = 'entregado';
-                    if(pedido.estado === 'Cancelado') claseColor = 'cancelado';
+                    if (p.estado === "Pendiente") sumaBolsas += p.cantidad_bolsas;
                     
-                    // Si el correo dice Pedido Telefónico, le ponemos una viñeta para distinguirlo visualmente
-                    let iconoOrigen = pedido.correo === "Pedido Telefónico" ? "📞 " : "🌐 ";
+                    const fechaF = new Date(p.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
+                    let clase = p.estado === 'Entregado' ? 'entregado' : p.estado === 'Cancelado' ? 'cancelado' : 'pendiente';
+                    
+                    // Ícono especial si viene de Excel
+                    let icono = p.correo === "Pedido Telefónico" ? "📞 " : (p.origen === "Excel" ? "📊 " : "🌐 ");
 
-                    const fila = `
-                        <tr>
-                            <td><small>${fechaFormat}</small></td>
-                            <td><strong>${iconoOrigen}${pedido.negocio || 'N/A'}</strong></td>
-                            <td>${pedido.direccion || 'N/A'}</td>
-                            <td>${pedido.contacto || 'N/A'}<br><small>${pedido.telefono || ''}</small></td>
-                            <td><strong>${pedido.cantidad_bolsas}</strong></td>
-                            <td><span class="estado ${claseColor}">${pedido.estado}</span></td>
-                            <td>
-                                <div class="acciones-grid">
-                                    <button class="btn-accion btn-entregar" onclick="cambiarEstado('${id}', 'Entregado')" title="Marcar Entregado" ${pedido.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
-                                    <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${id}', 'Cancelado')" title="No se puede cumplir" ${pedido.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
-                                    <button class="btn-accion btn-borrar" onclick="borrarPedido('${id}')" title="Eliminar">🗑️</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    cuerpoTabla.innerHTML += fila;
+                    cuerpoTabla.innerHTML += `<tr>
+                        <td><small>${fechaF}</small></td>
+                        <td><strong>${icono}${p.negocio || 'N/A'}</strong></td>
+                        <td>${p.direccion || 'N/A'}</td>
+                        <td>${p.contacto || 'N/A'}<br><small>${p.telefono || ''}</small></td>
+                        <td><strong>${p.cantidad_bolsas}</strong></td>
+                        <td><span class="estado ${clase}">${p.estado}</span></td>
+                        <td><div class="acciones-grid">
+                            <button class="btn-accion btn-entregar" onclick="cambiarEstado('${doc.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
+                            <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${doc.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
+                            <button class="btn-accion btn-borrar" onclick="borrarPedido('${doc.id}')">🗑️</button>
+                        </div></td>
+                    </tr>`;
                 });
 
                 document.getElementById('totalPedidos').innerText = conteoPedidos;
                 document.getElementById('totalBolsas').innerText = sumaBolsas;
                 document.getElementById('totalOllas').innerText = Math.ceil(sumaBolsas / 160);
-
-                if(conteoPedidos === 0) { cuerpoTabla.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay pedidos registrados.</td></tr>'; }
+                if(conteoPedidos === 0) cuerpoTabla.innerHTML = '<tr><td colspan="7" style="text-align: center;">Sin pedidos.</td></tr>';
             });
         }
 
-        window.cambiarEstado = async function(idPedido, nuevoEstado) {
-            let mensaje = nuevoEstado === 'Entregado' ? '¿Confirmas entrega?' : '¿Cancelar pedido?';
-            if(confirm(mensaje)) { await updateDoc(doc(db, "pedidos", idPedido), { estado: nuevoEstado }); }
-        }
-        window.borrarPedido = async function(idPedido) {
-            if(confirm("⚠️ ¿Eliminar pedido por completo?")) { await deleteDoc(doc(db, "pedidos", idPedido)); }
-        }
+        window.cambiarEstado = async (id, estado) => { if(confirm(`¿Confirmar ${estado}?`)) await updateDoc(doc(db, "pedidos", id), { estado }); }
+        window.borrarPedido = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "pedidos", id)); }
     </script>
 </body>
 </html>
