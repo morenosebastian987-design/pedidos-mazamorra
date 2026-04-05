@@ -11,8 +11,8 @@
         p.subtitulo { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
         .grupo-form { margin-bottom: 15px; }
         label { font-weight: 600; color: #444; font-size: 14px; display: block; margin-bottom: 5px; }
-        input, select { width: 100%; padding: 12px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; transition: border-color 0.3s; }
-        input:focus, select:focus { border-color: #f5b041; outline: none; }
+        input { width: 100%; padding: 12px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; transition: border-color 0.3s; }
+        input:focus { border-color: #f5b041; outline: none; }
         button { width: 100%; padding: 14px; margin-top: 10px; background-color: #f5b041; color: #333; border: none; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
         button:hover { background-color: #e6a13c; }
         .separador { border-bottom: 2px dashed #eee; margin: 20px 0; }
@@ -33,10 +33,6 @@
                 <input type="text" id="nombreContacto" required>
             </div>
             <div class="grupo-form">
-                <label>Correo Electrónico:</label>
-                <input type="email" id="correo" required>
-            </div>
-            <div class="grupo-form">
                 <label>Teléfono / WhatsApp:</label>
                 <input type="tel" id="telefono" required>
             </div>
@@ -46,16 +42,6 @@
             </div>
 
             <div class="separador"></div>
-
-            <div class="grupo-form">
-                <label>Tarifa Acordada (Precio por Bolsa):</label>
-                <select id="precioAcordado" required>
-                    <option value="">Selecciona tu tarifa...</option>
-                    <option value="2900">Tienda ($2.900)</option>
-                    <option value="2200">Distribuidor ($2.200)</option>
-                    <option value="2000">Mayorista Gran Volumen ($2.000)</option>
-                </select>
-            </div>
 
             <div class="grupo-form">
                 <label>Cantidad de Bolsas (1kg):</label>
@@ -88,26 +74,28 @@
             
             const negocio = document.getElementById('nombreNegocio').value;
             const contacto = document.getElementById('nombreContacto').value;
-            const correo = document.getElementById('correo').value;
             const telefono = document.getElementById('telefono').value;
             const direccion = document.getElementById('direccion').value;
             const cantidad = parseInt(document.getElementById('cantidadBolsas').value);
-            const precio = parseInt(document.getElementById('precioAcordado').value); // CAPTURAMOS EL PRECIO
             
             const boton = document.getElementById('btnEnviar');
             boton.innerText = "Procesando..."; boton.disabled = true;
 
             try {
+                // Se envía el pedido SIN PRECIO, el admin.html lo calculará según el directorio
                 await addDoc(collection(db, "pedidos"), {
-                    negocio: negocio, contacto: contacto, correo: correo,
-                    telefono: telefono, direccion: direccion,
+                    negocio: negocio.trim(), 
+                    contacto: contacto, 
+                    telefono: telefono, 
+                    direccion: direccion,
                     cantidad_bolsas: cantidad, 
-                    precio_unitario: precio, // GUARDAMOS EL PRECIO EXACTO
-                    fecha: new Date().toISOString(), estado: "Pendiente", origen: "Web"
+                    fecha: new Date().toISOString(), 
+                    estado: "Pendiente", 
+                    origen: "Web"
                 });
 
                 const numeroEmpresa = "573108420470"; 
-                const mensaje = `🌽 *NUEVO PEDIDO*\n\n*Negocio:* ${negocio}\n*Pedido:* ${cantidad} Bolsas\n*Tarifa:* $${precio}`;
+                const mensaje = `🌽 *NUEVO PEDIDO WEB*\n\n*Negocio:* ${negocio}\n*Pedido:* ${cantidad} Bolsas\n*Dirección:* ${direccion}`;
                 window.location.href = `https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensaje)}`; 
             } catch (error) {
                 alert("Hubo un error al guardar el pedido.");
