@@ -7,7 +7,7 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
         
-        /* ESTILOS DEL LOGIN */
+        /* LOGIN */
         #pantalla-login { height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #1a1a1a; }
         .caja-login { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 350px; text-align: center; }
         .caja-login h2 { color: #f5b041; margin-top: 0; }
@@ -16,7 +16,7 @@
         .caja-login button:hover { background: #e6a13c; }
         .error-login { color: #dc3545; font-size: 13px; margin-top: 10px; display: none; }
 
-        /* ESTILOS DEL DASHBOARD (Oculto por defecto) */
+        /* DASHBOARD */
         #pantalla-dashboard { display: none; }
         .navbar { background-color: #1a1a1a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .navbar h1 { margin: 0; font-size: 20px; color: #f5b041; }
@@ -30,9 +30,12 @@
         .tarjeta .numero { font-size: 28px; font-weight: bold; color: #1a1a1a; }
 
         .panel-tabla { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
-        .panel-header { padding: 15px 20px; background-color: #fff; border-bottom: 1px solid #eee; }
+        .panel-header { padding: 15px 20px; background-color: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;}
         .panel-header h2 { margin: 0; font-size: 18px; }
         
+        .btn-nuevo { background-color: #f5b041; color: #1a1a1a; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-nuevo:hover { background-color: #e6a13c; }
+
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th { background-color: #f8f9fa; padding: 12px 15px; font-weight: 600; color: #555; border-bottom: 2px solid #ddd; }
         td { padding: 12px 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
@@ -42,6 +45,7 @@
         .estado.pendiente { background-color: #fff3cd; color: #856404; }
         .estado.entregado { background-color: #d4edda; color: #155724; }
         .estado.cancelado { background-color: #f8d7da; color: #721c24; }
+        .estado.manual { background-color: #cce5ff; color: #004085; } /* Color especial para saber que fue por teléfono */
         
         .acciones-grid { display: flex; gap: 5px; flex-wrap: wrap; }
         .btn-accion { padding: 6px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: background 0.3s; color: white; }
@@ -52,6 +56,17 @@
         .btn-borrar { background-color: #dc3545; }
         .btn-borrar:hover { background-color: #c82333; }
         .btn-accion:disabled { background-color: #ccc; cursor: not-allowed; color: #666; }
+
+        /* ESTILOS DEL MODAL (Ventana Emergente) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
+        .modal-contenido { background-color: #fff; padding: 25px; border-radius: 10px; width: 100%; max-width: 400px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .cerrar { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; }
+        .cerrar:hover { color: #333; }
+        .grupo-form { margin-bottom: 15px; }
+        .grupo-form label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555; }
+        .grupo-form input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .btn-guardar-manual { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 15px; }
+        .btn-guardar-manual:hover { background-color: #218838; }
     </style>
 </head>
 <body>
@@ -95,6 +110,7 @@
             <div class="panel-tabla">
                 <div class="panel-header">
                     <h2>📋 Gestión de Pedidos B2B</h2>
+                    <button class="btn-nuevo" id="btnAbrirModal">+ Nuevo Pedido Manual</button>
                 </div>
                 <table>
                     <thead>
@@ -116,61 +132,126 @@
         </div>
     </div>
 
+    <div id="modalNuevoPedido" class="modal">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModal">&times;</span>
+            <h2 style="margin-top: 0; color: #333;">📞 Pedido Telefónico</h2>
+            <form id="formManual">
+                <div class="grupo-form">
+                    <label>Negocio o Tienda:</label>
+                    <input type="text" id="manualNegocio" required placeholder="Ej: Tienda Don José">
+                </div>
+                <div class="grupo-form">
+                    <label>Contacto (Quien llamó):</label>
+                    <input type="text" id="manualContacto" placeholder="Nombre de la persona (Opcional)">
+                </div>
+                <div class="grupo-form">
+                    <label>Teléfono:</label>
+                    <input type="tel" id="manualTelefono" required placeholder="Ej: 310...">
+                </div>
+                <div class="grupo-form">
+                    <label>Dirección de Entrega:</label>
+                    <input type="text" id="manualDireccion" required placeholder="Calle, Barrio...">
+                </div>
+                <div class="grupo-form">
+                    <label>Cantidad de Bolsas:</label>
+                    <input type="number" id="manualBolsas" required min="1" placeholder="¿Cuántas?">
+                </div>
+                <button type="submit" class="btn-guardar-manual" id="btnGuardarManual">Guardar Pedido</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        // NUEVAS HERRAMIENTAS: Importamos la seguridad de Firebase
+        // IMPORTANTE: Agregamos addDoc para poder inyectar pedidos manualmente
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         // ⚠️ REEMPLAZA ESTO CON TUS LLAVES DE FIREBASE ⚠️
         const firebaseConfig = {
-            apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
-            authDomain: "pedidos-mazamorra.firebaseapp.com",
-            projectId: "pedidos-mazamorra",
-            storageBucket: "pedidos-mazamorra.firebasestorage.app",
-            messagingSenderId: "845900639474",
-            appId: "1:845900639474:web:f2dc79841165e7f991b46b"
-        };
+                apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
+                authDomain: "pedidos-mazamorra.firebaseapp.com",
+                projectId: "pedidos-mazamorra",
+                storageBucket: "pedidos-mazamorra.firebasestorage.app",
+                messagingSenderId: "845900639474",
+                appId: "1:845900639474:web:f2dc79841165e7f991b46b"
+                        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const auth = getAuth(app); // Inicializamos el guardia de seguridad
+        const auth = getAuth(app); 
 
-        // --- LÓGICA DE SEGURIDAD (LOGIN/LOGOUT) ---
-        
-        // 1. Escuchar si alguien inició sesión o cerró sesión
+        // --- LÓGICA DE SEGURIDAD ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Si la llave es válida, ocultamos el login y mostramos el panel
                 document.getElementById('pantalla-login').style.display = 'none';
                 document.getElementById('pantalla-dashboard').style.display = 'block';
                 document.getElementById('correo-usuario').innerText = user.email;
-                cargarDatos(); // Solo cargamos los datos si tiene permiso
+                cargarDatos(); 
             } else {
-                // Si no hay llave, mostramos el login
                 document.getElementById('pantalla-login').style.display = 'flex';
                 document.getElementById('pantalla-dashboard').style.display = 'none';
             }
         });
 
-        // 2. Intentar Iniciar Sesión al dar clic al botón
         document.getElementById('btnIngresar').addEventListener('click', () => {
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
             const msjError = document.getElementById('mensaje-error');
-
             signInWithEmailAndPassword(auth, email, pass)
-                .then(() => { msjError.style.display = 'none'; }) // Entra con éxito
-                .catch((error) => { msjError.style.display = 'block'; }); // Falla
+                .then(() => { msjError.style.display = 'none'; }) 
+                .catch(() => { msjError.style.display = 'block'; }); 
         });
 
-        // 3. Cerrar Sesión
-        document.getElementById('btnSalir').addEventListener('click', () => {
-            signOut(auth);
+        document.getElementById('btnSalir').addEventListener('click', () => { signOut(auth); });
+
+        // --- LÓGICA DEL MODAL (PEDIDO MANUAL) ---
+        const modal = document.getElementById('modalNuevoPedido');
+        const btnAbrirModal = document.getElementById('btnAbrirModal');
+        const btnCerrarModal = document.getElementById('btnCerrarModal');
+        const formManual = document.getElementById('formManual');
+
+        // Abrir ventana
+        btnAbrirModal.addEventListener('click', () => { modal.style.display = 'flex'; });
+        // Cerrar ventana
+        btnCerrarModal.addEventListener('click', () => { modal.style.display = 'none'; formManual.reset(); });
+        // Cerrar si hace clic fuera de la ventana
+        window.addEventListener('click', (e) => { if (e.target === modal) { modal.style.display = 'none'; formManual.reset(); } });
+
+        // Guardar el pedido manual en Firebase
+        formManual.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnGuardar = document.getElementById('btnGuardarManual');
+            btnGuardar.innerText = 'Guardando...';
+            btnGuardar.disabled = true;
+
+            try {
+                await addDoc(collection(db, "pedidos"), {
+                    negocio: document.getElementById('manualNegocio').value,
+                    contacto: document.getElementById('manualContacto').value || "No especificado",
+                    correo: "Pedido Telefónico", // Etiqueta especial
+                    telefono: document.getElementById('manualTelefono').value,
+                    direccion: document.getElementById('manualDireccion').value,
+                    cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value),
+                    fecha: new Date().toISOString(),
+                    estado: "Pendiente",
+                    origen: "Manual" // Para estadísticas futuras
+                });
+                
+                modal.style.display = 'none';
+                formManual.reset();
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Hubo un error al guardar el pedido.");
+            } finally {
+                btnGuardar.innerText = 'Guardar Pedido';
+                btnGuardar.disabled = false;
+            }
         });
 
 
-        // --- LÓGICA DE DATOS (Lo que ya tenías) ---
+        // --- LÓGICA DE DATOS Y TABLA ---
         function cargarDatos() {
             const pedidosRef = collection(db, "pedidos");
             const consulta = query(pedidosRef, orderBy("fecha", "desc"));
@@ -178,9 +259,7 @@
             onSnapshot(consulta, (snapshot) => {
                 const cuerpoTabla = document.getElementById('cuerpoTabla');
                 cuerpoTabla.innerHTML = ''; 
-                
-                let conteoPedidos = 0;
-                let sumaBolsas = 0;
+                let conteoPedidos = 0, sumaBolsas = 0;
 
                 snapshot.forEach((documento) => {
                     const pedido = documento.data();
@@ -194,11 +273,14 @@
                     let claseColor = 'pendiente';
                     if(pedido.estado === 'Entregado') claseColor = 'entregado';
                     if(pedido.estado === 'Cancelado') claseColor = 'cancelado';
+                    
+                    // Si el correo dice Pedido Telefónico, le ponemos una viñeta para distinguirlo visualmente
+                    let iconoOrigen = pedido.correo === "Pedido Telefónico" ? "📞 " : "🌐 ";
 
                     const fila = `
                         <tr>
-                            <td>${fechaFormat}</td>
-                            <td><strong>${pedido.negocio || 'N/A'}</strong></td>
+                            <td><small>${fechaFormat}</small></td>
+                            <td><strong>${iconoOrigen}${pedido.negocio || 'N/A'}</strong></td>
                             <td>${pedido.direccion || 'N/A'}</td>
                             <td>${pedido.contacto || 'N/A'}<br><small>${pedido.telefono || ''}</small></td>
                             <td><strong>${pedido.cantidad_bolsas}</strong></td>
@@ -207,7 +289,7 @@
                                 <div class="acciones-grid">
                                     <button class="btn-accion btn-entregar" onclick="cambiarEstado('${id}', 'Entregado')" title="Marcar Entregado" ${pedido.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
                                     <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${id}', 'Cancelado')" title="No se puede cumplir" ${pedido.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
-                                    <button class="btn-accion btn-borrar" onclick="borrarPedido('${id}')" title="Eliminar de la base de datos">🗑️</button>
+                                    <button class="btn-accion btn-borrar" onclick="borrarPedido('${id}')" title="Eliminar">🗑️</button>
                                 </div>
                             </td>
                         </tr>
@@ -223,19 +305,12 @@
             });
         }
 
-        // Funciones globales
         window.cambiarEstado = async function(idPedido, nuevoEstado) {
-            let mensaje = nuevoEstado === 'Entregado' ? '¿Confirmas que este pedido fue entregado?' : '¿Marcar este pedido como Cancelado/No cumplido?';
-            if(confirm(mensaje)) {
-                const pedidoDoc = doc(db, "pedidos", idPedido);
-                await updateDoc(pedidoDoc, { estado: nuevoEstado });
-            }
+            let mensaje = nuevoEstado === 'Entregado' ? '¿Confirmas entrega?' : '¿Cancelar pedido?';
+            if(confirm(mensaje)) { await updateDoc(doc(db, "pedidos", idPedido), { estado: nuevoEstado }); }
         }
         window.borrarPedido = async function(idPedido) {
-            if(confirm("⚠️ ADVERTENCIA: ¿Seguro que quieres ELIMINAR este pedido?")) {
-                const pedidoDoc = doc(db, "pedidos", idPedido);
-                await deleteDoc(pedidoDoc);
-            }
+            if(confirm("⚠️ ¿Eliminar pedido por completo?")) { await deleteDoc(doc(db, "pedidos", idPedido)); }
         }
     </script>
 </body>
