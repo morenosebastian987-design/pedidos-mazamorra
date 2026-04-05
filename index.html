@@ -11,8 +11,8 @@
         p.subtitulo { text-align: center; color: #666; margin-bottom: 25px; font-size: 14px; }
         .grupo-form { margin-bottom: 15px; }
         label { font-weight: 600; color: #444; font-size: 14px; display: block; margin-bottom: 5px; }
-        input { width: 100%; padding: 12px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; transition: border-color 0.3s; }
-        input:focus { border-color: #f5b041; outline: none; }
+        input, select { width: 100%; padding: 12px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; transition: border-color 0.3s; }
+        input:focus, select:focus { border-color: #f5b041; outline: none; }
         button { width: 100%; padding: 14px; margin-top: 10px; background-color: #f5b041; color: #333; border: none; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
         button:hover { background-color: #e6a13c; }
         .separador { border-bottom: 2px dashed #eee; margin: 20px 0; }
@@ -26,34 +26,40 @@
         <form id="formularioPedido">
             <div class="grupo-form">
                 <label>Nombre del Negocio (Tienda/Supermercado):</label>
-                <input type="text" id="nombreNegocio" placeholder="Ej: Supermercado El Ahorro" required>
+                <input type="text" id="nombreNegocio" required>
             </div>
-
             <div class="grupo-form">
                 <label>Nombre del Contacto:</label>
-                <input type="text" id="nombreContacto" placeholder="Tu nombre completo" required>
+                <input type="text" id="nombreContacto" required>
             </div>
-
             <div class="grupo-form">
                 <label>Correo Electrónico:</label>
-                <input type="email" id="correo" placeholder="ejemplo@correo.com" required>
+                <input type="email" id="correo" required>
             </div>
-
             <div class="grupo-form">
                 <label>Teléfono / WhatsApp:</label>
-                <input type="tel" id="telefono" placeholder="Ej: 310..." required>
+                <input type="tel" id="telefono" required>
             </div>
-
             <div class="grupo-form">
                 <label>Dirección de Entrega y Ciudad:</label>
-                <input type="text" id="direccion" placeholder="Ej: Calle 12 #34-56, Pereira" required>
+                <input type="text" id="direccion" required>
             </div>
 
             <div class="separador"></div>
 
             <div class="grupo-form">
+                <label>Tarifa Acordada (Precio por Bolsa):</label>
+                <select id="precioAcordado" required>
+                    <option value="">Selecciona tu tarifa...</option>
+                    <option value="2900">Tienda ($2.900)</option>
+                    <option value="2200">Distribuidor ($2.200)</option>
+                    <option value="2000">Mayorista Gran Volumen ($2.000)</option>
+                </select>
+            </div>
+
+            <div class="grupo-form">
                 <label>Cantidad de Bolsas (1kg):</label>
-                <input type="number" id="cantidadBolsas" min="1" placeholder="¿Cuántas necesitas hoy?" required>
+                <input type="number" id="cantidadBolsas" min="1" required>
             </div>
 
             <button type="submit" id="btnEnviar">Confirmar Pedido</button>
@@ -64,7 +70,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // ⚠️ REEMPLAZA ESTO CON TUS LLAVES DE FIREBASE (Las de apiKey, authDomain, etc.)
+        // ⚠️ TUS LLAVES AQUÍ
         const firebaseConfig = {
             apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
             authDomain: "pedidos-mazamorra.firebaseapp.com",
@@ -80,43 +86,32 @@
         document.getElementById('formularioPedido').addEventListener('submit', async function(e) {
             e.preventDefault(); 
             
-            // Capturamos TODOS los datos nuevos
             const negocio = document.getElementById('nombreNegocio').value;
             const contacto = document.getElementById('nombreContacto').value;
             const correo = document.getElementById('correo').value;
             const telefono = document.getElementById('telefono').value;
             const direccion = document.getElementById('direccion').value;
             const cantidad = parseInt(document.getElementById('cantidadBolsas').value);
+            const precio = parseInt(document.getElementById('precioAcordado').value); // CAPTURAMOS EL PRECIO
             
             const boton = document.getElementById('btnEnviar');
-            boton.innerText = "Procesando...";
-            boton.style.backgroundColor = "#ccc";
+            boton.innerText = "Procesando..."; boton.disabled = true;
 
             try {
-                // Guardamos un perfil de datos mucho más completo en la base de datos
                 await addDoc(collection(db, "pedidos"), {
-                    negocio: negocio,
-                    contacto: contacto,
-                    correo: correo,
-                    telefono: telefono,
-                    direccion: direccion,
-                    cantidad_bolsas: cantidad,
-                    fecha: new Date().toISOString(),
-                    estado: "Pendiente"
+                    negocio: negocio, contacto: contacto, correo: correo,
+                    telefono: telefono, direccion: direccion,
+                    cantidad_bolsas: cantidad, 
+                    precio_unitario: precio, // GUARDAMOS EL PRECIO EXACTO
+                    fecha: new Date().toISOString(), estado: "Pendiente", origen: "Web"
                 });
 
-                // El mensaje de WhatsApp ahora es un resumen profesional
                 const numeroEmpresa = "573108420470"; 
-                const mensaje = `🌽 *NUEVO PEDIDO - MAZAMORRA LA ORIGINAL* 🌽\n\n*Negocio:* ${negocio}\n*Contacto:* ${contacto}\n*Dirección:* ${direccion}\n*Teléfono:* ${telefono}\n\n*Pedido:* ${cantidad} Bolsas (1kg)`;
-                const urlWhatsapp = `https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensaje)}`;
-                
-                window.location.href = urlWhatsapp; 
-
+                const mensaje = `🌽 *NUEVO PEDIDO*\n\n*Negocio:* ${negocio}\n*Pedido:* ${cantidad} Bolsas\n*Tarifa:* $${precio}`;
+                window.location.href = `https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensaje)}`; 
             } catch (error) {
-                console.error("Error al guardar en Firebase:", error);
-                alert("Hubo un error al guardar el pedido. Intenta de nuevo.");
-                boton.innerText = "Confirmar Pedido";
-                boton.style.backgroundColor = "#f5b041";
+                alert("Hubo un error al guardar el pedido.");
+                boton.innerText = "Confirmar Pedido"; boton.disabled = false;
             }
         });
     </script>

@@ -10,7 +10,6 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
         
-        /* LOGIN */
         #pantalla-login { height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #1a1a1a; }
         .caja-login { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 100%; max-width: 350px; text-align: center; }
         .caja-login h2 { color: #f5b041; margin-top: 0; }
@@ -19,7 +18,6 @@
         .caja-login button:hover { background: #e6a13c; }
         .error-login { color: #dc3545; font-size: 13px; margin-top: 10px; display: none; }
 
-        /* DASHBOARD */
         #pantalla-dashboard { display: none; }
         .navbar { background-color: #1a1a1a; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .navbar h1 { margin: 0; font-size: 20px; color: #f5b041; }
@@ -27,7 +25,6 @@
         
         .contenedor { padding: 20px; max-width: 1200px; margin: auto; }
         
-        /* INVENTARIO */
         .seccion-titulo { margin: 20px 0 10px 0; font-size: 18px; color: #444; display: flex; justify-content: space-between; align-items: center; }
         .resumen-inventario { display: flex; gap: 15px; margin-bottom: 25px; }
         .tarjeta-inv { background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #17a2b8; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
@@ -39,13 +36,13 @@
         .btn-produccion { background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
         .btn-ajuste { background-color: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
 
-        /* RESUMEN PEDIDOS */
-        .resumen { display: flex; gap: 20px; margin-bottom: 20px; }
-        .tarjeta { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; text-align: center; border-top: 4px solid #f5b041; }
+        .resumen { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tarjeta { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; min-width: 200px; text-align: center; border-top: 4px solid #f5b041; }
         .tarjeta h3 { margin: 0 0 10px 0; color: #666; font-size: 14px; text-transform: uppercase; }
-        .tarjeta .numero { font-size: 28px; font-weight: bold; color: #1a1a1a; }
+        .tarjeta .numero { font-size: 26px; font-weight: bold; color: #1a1a1a; }
+        .tarjeta-dinero { border-top: 4px solid #28a745; background-color: #f8fff9; }
+        .tarjeta-dinero .numero { color: #28a745; }
 
-        /* TABLA PEDIDOS */
         .panel-tabla { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
         .panel-header { padding: 15px 20px; background-color: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;}
         .panel-header h2 { margin: 0; font-size: 18px; }
@@ -70,13 +67,12 @@
         .btn-borrar { background-color: #dc3545; }
         .btn-accion:disabled { background-color: #ccc; cursor: not-allowed; color: #666; }
 
-        /* MODALES */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
         .modal-contenido { background-color: #fff; padding: 25px; border-radius: 10px; width: 100%; max-width: 400px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
         .cerrar { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; }
         .grupo-form { margin-bottom: 15px; }
         .grupo-form label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555; }
-        .grupo-form input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .grupo-form input, .grupo-form select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         .btn-guardar-manual { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
@@ -102,7 +98,6 @@
         </div>
 
         <div class="contenedor">
-            
             <div class="seccion-titulo">
                 <strong>📦 Bodega de Insumos</strong>
                 <div class="grupo-botones-header">
@@ -111,25 +106,17 @@
                 </div>
             </div>
             <div class="resumen-inventario">
-                <div class="tarjeta-inv">
-                    <h3>Maíz Amarillo (Kg)</h3>
-                    <div class="numero" id="invMaiz">Cargando...</div>
-                </div>
-                <div class="tarjeta-inv">
-                    <h3>Bolsas Zenner (Und)</h3>
-                    <div class="numero" id="invBolsas">Cargando...</div>
-                </div>
-                <div class="tarjeta-inv" style="border-left-color: #6f42c1;">
-                    <h3>Soda Cáustica (Kg)</h3>
-                    <div class="numero" id="invSoda">Cargando...</div>
-                </div>
+                <div class="tarjeta-inv"><h3>Maíz Amarillo (Kg)</h3><div class="numero" id="invMaiz">0</div></div>
+                <div class="tarjeta-inv"><h3>Bolsas Zenner (Und)</h3><div class="numero" id="invBolsas">0</div></div>
+                <div class="tarjeta-inv" style="border-left-color: #6f42c1;"><h3>Soda Cáustica (Kg)</h3><div class="numero" id="invSoda">0</div></div>
             </div>
 
-            <div class="seccion-titulo"><strong>📊 Demanda del Día</strong></div>
+            <div class="seccion-titulo"><strong>📊 Demanda y Finanzas del Día</strong></div>
             <div class="resumen">
                 <div class="tarjeta"><h3>Pedidos Hoy</h3><div class="numero" id="totalPedidos">0</div></div>
                 <div class="tarjeta"><h3>Bolsas Pendientes</h3><div class="numero" id="totalBolsas">0</div></div>
                 <div class="tarjeta"><h3>Ollas a Cocinar</h3><div class="numero" id="totalOllas">0</div></div>
+                <div class="tarjeta tarjeta-dinero"><h3>Ingresos (Entregados)</h3><div class="numero" id="totalIngresos">$0</div></div>
             </div>
 
             <div class="panel-tabla">
@@ -146,9 +133,9 @@
                         <tr>
                             <th>Fecha</th>
                             <th>Negocio</th>
-                            <th>Dirección</th>
-                            <th>Contacto</th>
+                            <th>Precio/Bolsa</th>
                             <th>Bolsas</th>
+                            <th>Total</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -165,20 +152,10 @@
         <div class="modal-contenido">
             <span class="cerrar" id="btnCerrarModalAjuste">&times;</span>
             <h2>✏️ Ajuste Físico de Bodega</h2>
-            <p style="font-size: 13px; color: #666;">Ingresa la cantidad EXACTA que hay actualmente en la bodega física o después de una compra.</p>
             <form id="formAjuste">
-                <div class="grupo-form">
-                    <label>Maíz Amarillo (Kilos totales):</label>
-                    <input type="number" id="ajusteMaiz" required min="0" step="any">
-                </div>
-                <div class="grupo-form">
-                    <label>Bolsas Zenner (Unidades totales):</label>
-                    <input type="number" id="ajusteBolsas" required min="0">
-                </div>
-                <div class="grupo-form">
-                    <label>Soda Cáustica (Kilos totales):</label>
-                    <input type="number" id="ajusteSoda" required min="0" step="any">
-                </div>
+                <div class="grupo-form"><label>Maíz Amarillo (Kg):</label><input type="number" id="ajusteMaiz" required min="0" step="any"></div>
+                <div class="grupo-form"><label>Bolsas Zenner (Und):</label><input type="number" id="ajusteBolsas" required min="0"></div>
+                <div class="grupo-form"><label>Soda Cáustica (Kg):</label><input type="number" id="ajusteSoda" required min="0" step="any"></div>
                 <button type="submit" class="btn-guardar-manual" style="background-color: #6c757d;">Guardar Inventario Real</button>
             </form>
         </div>
@@ -188,13 +165,9 @@
         <div class="modal-contenido">
             <span class="cerrar" id="btnCerrarModalCocina">&times;</span>
             <h2>🍲 Registrar Producción</h2>
-            <p style="font-size: 13px; color: #666;">Se descontará: Maíz (25kg), Bolsas (160) y Soda Cáustica (0.5kg) por cada olla.</p>
             <form id="formCocina">
-                <div class="grupo-form">
-                    <label>¿Cuántas ollas se cocinaron hoy?</label>
-                    <input type="number" id="ollasCocinadas" required min="1" value="1">
-                </div>
-                <button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Confirmar y Descontar Insumos</button>
+                <div class="grupo-form"><label>Ollas cocinadas:</label><input type="number" id="ollasCocinadas" required min="1" value="1"></div>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Confirmar Descuento</button>
             </form>
         </div>
     </div>
@@ -205,46 +178,49 @@
             <h2>📞 Pedido Telefónico</h2>
             <form id="formManual">
                 <div class="grupo-form"><label>Negocio:</label><input type="text" id="manualNegocio" required></div>
-                <div class="grupo-form"><label>Contacto:</label><input type="text" id="manualContacto"></div>
-                <div class="grupo-form"><label>Teléfono:</label><input type="tel" id="manualTelefono" required></div>
                 <div class="grupo-form"><label>Dirección:</label><input type="text" id="manualDireccion" required></div>
+                
+                <div class="grupo-form">
+                    <label>Tarifa Acordada:</label>
+                    <select id="manualPrecio" required>
+                        <option value="2900">Tienda ($2.900)</option>
+                        <option value="2200" selected>Distribuidor ($2.200)</option>
+                        <option value="2000">Mayorista ($2.000)</option>
+                    </select>
+                </div>
+
                 <div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div>
                 <button type="submit" class="btn-guardar-manual">Guardar Pedido</button>
             </form>
         </div>
     </div>
 
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // ⚠️ REEMPLAZA CON TUS LLAVES DE FIREBASE ⚠️
+        // ⚠️ TUS LLAVES AQUÍ ⚠️
         const firebaseConfig = {
-          apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
-         authDomain: "pedidos-mazamorra.firebaseapp.com",
-        projectId: "pedidos-mazamorra",
-        storageBucket: "pedidos-mazamorra.firebasestorage.app",
-        messagingSenderId: "845900639474",
-        appId: "1:845900639474:web:f2dc79841165e7f991b46b"
+            apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
+            authDomain: "pedidos-mazamorra.firebaseapp.com",
+            projectId: "pedidos-mazamorra",
+            storageBucket: "pedidos-mazamorra.firebasestorage.app",
+            messagingSenderId: "845900639474",
+            appId: "1:845900639474:web:f2dc79841165e7f991b46b"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app); 
-
-        // Variables globales para guardar el inventario temporalmente
         let inventarioActual = { maiz_kg: 0, bolsas_unidades: 0, soda_kg: 0 };
 
-        // --- SEGURIDAD ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('pantalla-login').style.display = 'none';
                 document.getElementById('pantalla-dashboard').style.display = 'block';
                 document.getElementById('correo-usuario').innerText = user.email;
-                cargarDatos(); 
-                cargarInventario(); 
+                cargarDatos(); cargarInventario(); 
             } else {
                 document.getElementById('pantalla-login').style.display = 'flex';
                 document.getElementById('pantalla-dashboard').style.display = 'none';
@@ -253,37 +229,31 @@
 
         document.getElementById('btnIngresar').addEventListener('click', () => {
             signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value)
-                .then(() => { document.getElementById('mensaje-error').style.display = 'none'; }) 
                 .catch(() => { document.getElementById('mensaje-error').style.display = 'block'; }); 
         });
         document.getElementById('btnSalir').addEventListener('click', () => { signOut(auth); });
 
-        // --- EXCEL ---
+        // EXCEL IMPORT CON PRECIO
         const btnImportarExcel = document.getElementById('btnImportarExcel');
         const inputExcel = document.getElementById('inputExcel');
         btnImportarExcel.addEventListener('click', () => inputExcel.click());
-
         inputExcel.addEventListener('change', (e) => {
             const archivo = e.target.files[0];
             if (!archivo) return;
-            btnImportarExcel.innerText = '⏳ Procesando...';
-            btnImportarExcel.disabled = true;
-
+            btnImportarExcel.innerText = '⏳ Procesando...'; btnImportarExcel.disabled = true;
             const lector = new FileReader();
             lector.onload = async (evento) => {
                 try {
-                    const data = new Uint8Array(evento.target.result);
-                    const libro = window.XLSX.read(data, {type: 'array'});
-                    const hoja = libro.Sheets[libro.SheetNames[0]];
-                    const filasJson = window.XLSX.utils.sheet_to_json(hoja);
-
+                    const libro = window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'});
+                    const filasJson = window.XLSX.utils.sheet_to_json(libro.Sheets[libro.SheetNames[0]]);
                     for (let fila of filasJson) {
                         if (fila.Negocio && fila.Cantidad) { 
+                            const precioAsignado = fila.Precio ? parseInt(fila.Precio) : 2200; // Toma el precio del excel o asume 2200
                             await addDoc(collection(db, "pedidos"), {
-                                negocio: fila.Negocio, contacto: fila.Contacto || "N/A", correo: "Importado de Excel",
-                                telefono: fila.Telefono || "N/A", direccion: fila.Direccion || "N/A",
-                                cantidad_bolsas: parseInt(fila.Cantidad), fecha: new Date().toISOString(),
-                                estado: "Pendiente", origen: "Excel"
+                                negocio: fila.Negocio, correo: "Importado de Excel", telefono: fila.Telefono || "N/A", 
+                                direccion: fila.Direccion || "N/A", cantidad_bolsas: parseInt(fila.Cantidad), 
+                                precio_unitario: precioAsignado, // PRECIO DEL EXCEL
+                                fecha: new Date().toISOString(), estado: "Pendiente", origen: "Excel"
                             });
                         }
                     }
@@ -294,116 +264,98 @@
             lector.readAsArrayBuffer(archivo);
         });
 
-
-        // --- LÓGICA DE INVENTARIO ---
+        // INVENTARIO Y AJUSTES
         const refInventario = doc(db, "bodega", "insumos_principales");
-
         async function cargarInventario() {
             onSnapshot(refInventario, async (docSnap) => {
                 if (docSnap.exists()) {
-                    inventarioActual = docSnap.data(); // Guardamos los datos para usarlos en el modal de edición
-                    
+                    inventarioActual = docSnap.data();
                     document.getElementById('invMaiz').innerText = inventarioActual.maiz_kg;
                     document.getElementById('invBolsas').innerText = inventarioActual.bolsas_unidades;
-                    // Aseguramos compatibilidad si es la primera vez que se lee la base de datos vieja
                     document.getElementById('invSoda').innerText = inventarioActual.soda_kg !== undefined ? inventarioActual.soda_kg : "0";
-
-                    // Alertas
                     document.getElementById('invMaiz').classList.toggle('alerta-roja', inventarioActual.maiz_kg < 50);
                     document.getElementById('invBolsas').classList.toggle('alerta-roja', inventarioActual.bolsas_unidades < 500);
                     document.getElementById('invSoda').classList.toggle('alerta-roja', inventarioActual.soda_kg < 2);
                 } else {
-                    // Si no existe, creamos la bodega con valores base
                     await setDoc(refInventario, { maiz_kg: 500, bolsas_unidades: 3000, soda_kg: 10 });
                 }
             });
         }
 
-        // --- LÓGICA: AJUSTAR BODEGA (NUEVO) ---
         const modalAjuste = document.getElementById('modalAjuste');
         document.getElementById('btnAbrirModalAjuste').addEventListener('click', () => {
-            // Llenamos las casillas con lo que hay actualmente en el sistema
             document.getElementById('ajusteMaiz').value = inventarioActual.maiz_kg || 0;
             document.getElementById('ajusteBolsas').value = inventarioActual.bolsas_unidades || 0;
             document.getElementById('ajusteSoda').value = inventarioActual.soda_kg || 0;
             modalAjuste.style.display = 'flex';
         });
         document.getElementById('btnCerrarModalAjuste').addEventListener('click', () => modalAjuste.style.display = 'none');
-
         document.getElementById('formAjuste').addEventListener('submit', async (e) => {
             e.preventDefault();
-            // Sobrescribimos la base de datos con los valores exactos digitados
-            await updateDoc(refInventario, { 
-                maiz_kg: parseFloat(document.getElementById('ajusteMaiz').value), 
-                bolsas_unidades: parseInt(document.getElementById('ajusteBolsas').value),
-                soda_kg: parseFloat(document.getElementById('ajusteSoda').value)
-            });
+            await updateDoc(refInventario, { maiz_kg: parseFloat(document.getElementById('ajusteMaiz').value), bolsas_unidades: parseInt(document.getElementById('ajusteBolsas').value), soda_kg: parseFloat(document.getElementById('ajusteSoda').value) });
             modalAjuste.style.display = 'none';
         });
 
-        // --- LÓGICA: COCINA ---
         const modalCocina = document.getElementById('modalCocina');
         document.getElementById('btnAbrirModalCocina').addEventListener('click', () => modalCocina.style.display = 'flex');
         document.getElementById('btnCerrarModalCocina').addEventListener('click', () => modalCocina.style.display = 'none');
-
         document.getElementById('formCocina').addEventListener('submit', async (e) => {
             e.preventDefault();
             const ollas = parseInt(document.getElementById('ollasCocinadas').value);
-            
-            // FÓRMULA DE PRODUCCIÓN (Cambia los números aquí si gastan diferente)
-            const gastoMaiz = ollas * 25;
-            const gastoBolsas = ollas * 160;
-            const gastoSoda = ollas * 0.5; // ⬅️ Asumí medio kilo por olla, cámbialo si es necesario
-
-            if(confirm(`Se descontarán ${gastoMaiz}kg maíz, ${gastoBolsas} bolsas y ${gastoSoda}kg soda. ¿Confirmar?`)) {
-                await updateDoc(refInventario, { 
-                    maiz_kg: increment(-gastoMaiz), 
-                    bolsas_unidades: increment(-gastoBolsas),
-                    soda_kg: increment(-gastoSoda)
-                });
-                modalCocina.style.display = 'none';
-                document.getElementById('formCocina').reset();
+            if(confirm(`Se descontarán ${ollas * 25}kg maíz, ${ollas * 160} bolsas y ${ollas * 0.5}kg soda. ¿Confirmar?`)) {
+                await updateDoc(refInventario, { maiz_kg: increment(-(ollas * 25)), bolsas_unidades: increment(-(ollas * 160)), soda_kg: increment(-(ollas * 0.5)) });
+                modalCocina.style.display = 'none'; document.getElementById('formCocina').reset();
             }
         });
 
-        // --- LÓGICA DE PEDIDOS ---
+        // PEDIDOS MANUALES CON PRECIO
         const modalPedido = document.getElementById('modalNuevoPedido');
         document.getElementById('btnAbrirModal').addEventListener('click', () => modalPedido.style.display = 'flex');
         document.getElementById('btnCerrarModal').addEventListener('click', () => modalPedido.style.display = 'none');
-
         document.getElementById('formManual').addEventListener('submit', async (e) => {
             e.preventDefault();
             await addDoc(collection(db, "pedidos"), {
-                negocio: document.getElementById('manualNegocio').value, contacto: document.getElementById('manualContacto').value || "N/A",
-                correo: "Pedido Telefónico", telefono: document.getElementById('manualTelefono').value,
-                direccion: document.getElementById('manualDireccion').value, cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value),
-                fecha: new Date().toISOString(), estado: "Pendiente"
+                negocio: document.getElementById('manualNegocio').value, 
+                telefono: "N/A", direccion: document.getElementById('manualDireccion').value, 
+                cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value),
+                precio_unitario: parseInt(document.getElementById('manualPrecio').value), // PRECIO MANUAL
+                fecha: new Date().toISOString(), estado: "Pendiente", correo: "Pedido Telefónico"
             });
-            modalPedido.style.display = 'none';
-            document.getElementById('formManual').reset();
+            modalPedido.style.display = 'none'; document.getElementById('formManual').reset();
         });
 
         function cargarDatos() {
             onSnapshot(query(collection(db, "pedidos"), orderBy("fecha", "desc")), (snapshot) => {
                 const cuerpoTabla = document.getElementById('cuerpoTabla');
                 cuerpoTabla.innerHTML = ''; 
-                let conteoPedidos = 0, sumaBolsas = 0;
+                
+                let conteoPedidos = 0, sumaBolsasPendientes = 0, ingresosTotales = 0;
 
                 snapshot.forEach((doc) => {
                     const p = doc.data();
                     conteoPedidos++;
-                    if (p.estado === "Pendiente") sumaBolsas += p.cantidad_bolsas;
+                    
+                    // Asegurarnos de tener un precio (por si hay pedidos viejos en la base de datos)
+                    const precioAplicado = p.precio_unitario || 2200; 
+                    const totalPedido = p.cantidad_bolsas * precioAplicado;
+
+                    if (p.estado === "Pendiente") {
+                        sumaBolsasPendientes += p.cantidad_bolsas;
+                    } else if (p.estado === "Entregado") {
+                        ingresosTotales += totalPedido; // Suma el precio exacto de ESTE cliente
+                    }
                     
                     const fechaF = new Date(p.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
                     let clase = p.estado === 'Entregado' ? 'entregado' : p.estado === 'Cancelado' ? 'cancelado' : 'pendiente';
                     let icono = p.correo === "Pedido Telefónico" ? "📞 " : (p.origen === "Excel" ? "📊 " : "🌐 ");
 
+                    // Actualicé la tabla para que muestre el precio por bolsa y el total a cobrar de esa fila
                     cuerpoTabla.innerHTML += `<tr>
                         <td><small>${fechaF}</small></td>
-                        <td><strong>${icono}${p.negocio || 'N/A'}</strong></td>
-                        <td>${p.direccion || 'N/A'}</td>
-                        <td>${p.contacto || 'N/A'}<br><small>${p.telefono || ''}</small></td>
+                        <td><strong>${icono}${p.negocio || 'N/A'}</strong><br><small>${p.direccion || ''}</small></td>
+                        <td>$${precioAplicado.toLocaleString('es-CO')}</td>
                         <td><strong>${p.cantidad_bolsas}</strong></td>
+                        <td style="color: #28a745; font-weight: bold;">$${totalPedido.toLocaleString('es-CO')}</td>
                         <td><span class="estado ${clase}">${p.estado}</span></td>
                         <td><div class="acciones-grid">
                             <button class="btn-accion btn-entregar" onclick="cambiarEstado('${doc.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
@@ -414,8 +366,10 @@
                 });
 
                 document.getElementById('totalPedidos').innerText = conteoPedidos;
-                document.getElementById('totalBolsas').innerText = sumaBolsas;
-                document.getElementById('totalOllas').innerText = Math.ceil(sumaBolsas / 160);
+                document.getElementById('totalBolsas').innerText = sumaBolsasPendientes;
+                document.getElementById('totalOllas').innerText = Math.ceil(sumaBolsasPendientes / 160);
+                document.getElementById('totalIngresos').innerText = "$" + ingresosTotales.toLocaleString('es-CO');
+
                 if(conteoPedidos === 0) cuerpoTabla.innerHTML = '<tr><td colspan="7" style="text-align: center;">Sin pedidos.</td></tr>';
             });
         }
