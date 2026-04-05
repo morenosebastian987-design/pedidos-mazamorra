@@ -34,7 +34,10 @@
         .tarjeta-inv h3 { margin: 0 0 5px 0; font-size: 12px; color: #666; text-transform: uppercase; }
         .tarjeta-inv .numero { font-size: 24px; font-weight: bold; color: #333; }
         .alerta-roja { color: #dc3545 !important; }
+        
+        .grupo-botones-header { display: flex; gap: 10px; }
         .btn-produccion { background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-ajuste { background-color: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
 
         /* RESUMEN PEDIDOS */
         .resumen { display: flex; gap: 20px; margin-bottom: 20px; }
@@ -47,11 +50,8 @@
         .panel-header { padding: 15px 20px; background-color: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;}
         .panel-header h2 { margin: 0; font-size: 18px; }
         
-        /* BOTONES NUEVOS */
-        .grupo-botones-header { display: flex; gap: 10px; }
         .btn-nuevo { background-color: #f5b041; color: #1a1a1a; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
         .btn-importar { background-color: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        .btn-importar:hover { background-color: #218838; }
 
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
         th { background-color: #f8f9fa; padding: 12px 15px; font-weight: 600; color: #555; border-bottom: 2px solid #ddd; }
@@ -105,7 +105,10 @@
             
             <div class="seccion-titulo">
                 <strong>📦 Bodega de Insumos</strong>
-                <button class="btn-produccion" id="btnAbrirModalCocina">🍲 Registrar Producción</button>
+                <div class="grupo-botones-header">
+                    <button class="btn-ajuste" id="btnAbrirModalAjuste">✏️ Ajustar Bodega</button>
+                    <button class="btn-produccion" id="btnAbrirModalCocina">🍲 Registrar Producción</button>
+                </div>
             </div>
             <div class="resumen-inventario">
                 <div class="tarjeta-inv">
@@ -115,6 +118,10 @@
                 <div class="tarjeta-inv">
                     <h3>Bolsas Zenner (Und)</h3>
                     <div class="numero" id="invBolsas">Cargando...</div>
+                </div>
+                <div class="tarjeta-inv" style="border-left-color: #6f42c1;">
+                    <h3>Soda Cáustica (Kg)</h3>
+                    <div class="numero" id="invSoda">Cargando...</div>
                 </div>
             </div>
 
@@ -128,14 +135,11 @@
             <div class="panel-tabla">
                 <div class="panel-header">
                     <h2>📋 Rutas y Despachos</h2>
-                    
                     <div class="grupo-botones-header">
                         <input type="file" id="inputExcel" accept=".xlsx, .xls" style="display: none;">
                         <button class="btn-importar" id="btnImportarExcel">📥 Importar Excel</button>
-                        
                         <button class="btn-nuevo" id="btnAbrirModal">+ Pedido Telefónico</button>
                     </div>
-
                 </div>
                 <table>
                     <thead>
@@ -157,6 +161,44 @@
         </div>
     </div>
 
+    <div id="modalAjuste" class="modal">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalAjuste">&times;</span>
+            <h2>✏️ Ajuste Físico de Bodega</h2>
+            <p style="font-size: 13px; color: #666;">Ingresa la cantidad EXACTA que hay actualmente en la bodega física o después de una compra.</p>
+            <form id="formAjuste">
+                <div class="grupo-form">
+                    <label>Maíz Amarillo (Kilos totales):</label>
+                    <input type="number" id="ajusteMaiz" required min="0" step="any">
+                </div>
+                <div class="grupo-form">
+                    <label>Bolsas Zenner (Unidades totales):</label>
+                    <input type="number" id="ajusteBolsas" required min="0">
+                </div>
+                <div class="grupo-form">
+                    <label>Soda Cáustica (Kilos totales):</label>
+                    <input type="number" id="ajusteSoda" required min="0" step="any">
+                </div>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #6c757d;">Guardar Inventario Real</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalCocina" class="modal">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalCocina">&times;</span>
+            <h2>🍲 Registrar Producción</h2>
+            <p style="font-size: 13px; color: #666;">Se descontará: Maíz (25kg), Bolsas (160) y Soda Cáustica (0.5kg) por cada olla.</p>
+            <form id="formCocina">
+                <div class="grupo-form">
+                    <label>¿Cuántas ollas se cocinaron hoy?</label>
+                    <input type="number" id="ollasCocinadas" required min="1" value="1">
+                </div>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Confirmar y Descontar Insumos</button>
+            </form>
+        </div>
+    </div>
+
     <div id="modalNuevoPedido" class="modal">
         <div class="modal-contenido">
             <span class="cerrar" id="btnCerrarModal">&times;</span>
@@ -172,39 +214,28 @@
         </div>
     </div>
 
-    <div id="modalCocina" class="modal">
-        <div class="modal-contenido">
-            <span class="cerrar" id="btnCerrarModalCocina">&times;</span>
-            <h2>🍲 Registrar Producción</h2>
-            <p style="font-size: 13px; color: #666;">Descuento automático de inventario (Maíz y Bolsas).</p>
-            <form id="formCocina">
-                <div class="grupo-form">
-                    <label>¿Cuántas ollas se cocinaron hoy?</label>
-                    <input type="number" id="ollasCocinadas" required min="1" value="1">
-                </div>
-                <button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Confirmar y Descontar Insumos</button>
-            </form>
-        </div>
-    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // ⚠️ REEMPLAZA CON TUS LLAVES ⚠️
+        // ⚠️ REEMPLAZA CON TUS LLAVES DE FIREBASE ⚠️
         const firebaseConfig = {
-                apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
-                authDomain: "pedidos-mazamorra.firebaseapp.com",
-                projectId: "pedidos-mazamorra",
-                storageBucket: "pedidos-mazamorra.firebasestorage.app",
-                messagingSenderId: "845900639474",
-                appId: "1:845900639474:web:f2dc79841165e7f991b46b"
+                    apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
+                    authDomain: "pedidos-mazamorra.firebaseapp.com",
+                    projectId: "pedidos-mazamorra",
+                    storageBucket: "pedidos-mazamorra.firebasestorage.app",
+                    messagingSenderId: "845900639474",
+                    appId: "1:845900639474:web:f2dc79841165e7f991b46b"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app); 
+
+        // Variables globales para guardar el inventario temporalmente
+        let inventarioActual = { maiz_kg: 0, bolsas_unidades: 0, soda_kg: 0 };
 
         // --- SEGURIDAD ---
         onAuthStateChanged(auth, (user) => {
@@ -227,68 +258,39 @@
         });
         document.getElementById('btnSalir').addEventListener('click', () => { signOut(auth); });
 
-        // --- LÓGICA DE IMPORTAR EXCEL (NUEVO) ---
+        // --- EXCEL ---
         const btnImportarExcel = document.getElementById('btnImportarExcel');
         const inputExcel = document.getElementById('inputExcel');
+        btnImportarExcel.addEventListener('click', () => inputExcel.click());
 
-        // 1. Al dar clic al botón, abrimos la ventana oculta para seleccionar el archivo
-        btnImportarExcel.addEventListener('click', () => {
-            inputExcel.click();
-        });
-
-        // 2. Cuando el usuario selecciona un archivo, hacemos la magia
         inputExcel.addEventListener('change', (e) => {
             const archivo = e.target.files[0];
             if (!archivo) return;
-
             btnImportarExcel.innerText = '⏳ Procesando...';
             btnImportarExcel.disabled = true;
 
             const lector = new FileReader();
             lector.onload = async (evento) => {
                 try {
-                    // Leemos el archivo con la librería SheetJS
                     const data = new Uint8Array(evento.target.result);
-                    const libroDeTrabajo = window.XLSX.read(data, {type: 'array'});
-                    
-                    // Tomamos la primera hoja del Excel
-                    const nombrePrimeraHoja = libroDeTrabajo.SheetNames[0];
-                    const hoja = libroDeTrabajo.Sheets[nombrePrimeraHoja];
-                    
-                    // Convertimos la hoja a un formato que Javascript entienda (JSON)
+                    const libro = window.XLSX.read(data, {type: 'array'});
+                    const hoja = libro.Sheets[libro.SheetNames[0]];
                     const filasJson = window.XLSX.utils.sheet_to_json(hoja);
 
-                    let subidos = 0;
-
-                    // Recorremos cada fila del Excel y la enviamos a Firebase
                     for (let fila of filasJson) {
-                        if (fila.Negocio && fila.Cantidad) { // Solo subimos si tiene los datos mínimos
+                        if (fila.Negocio && fila.Cantidad) { 
                             await addDoc(collection(db, "pedidos"), {
-                                negocio: fila.Negocio,
-                                contacto: fila.Contacto || "N/A",
-                                correo: "Importado de Excel", // Etiqueta especial
-                                telefono: fila.Telefono || "N/A",
-                                direccion: fila.Direccion || "N/A",
-                                cantidad_bolsas: parseInt(fila.Cantidad),
-                                fecha: new Date().toISOString(),
-                                estado: "Pendiente",
-                                origen: "Excel"
+                                negocio: fila.Negocio, contacto: fila.Contacto || "N/A", correo: "Importado de Excel",
+                                telefono: fila.Telefono || "N/A", direccion: fila.Direccion || "N/A",
+                                cantidad_bolsas: parseInt(fila.Cantidad), fecha: new Date().toISOString(),
+                                estado: "Pendiente", origen: "Excel"
                             });
-                            subidos++;
                         }
                     }
-
-                    alert(`✅ ¡Éxito! Se importaron ${subidos} pedidos desde el Excel.`);
-                } catch (error) {
-                    console.error("Error leyendo Excel:", error);
-                    alert("Hubo un error al leer el archivo. Verifica que las columnas estén correctas.");
-                } finally {
-                    btnImportarExcel.innerText = '📥 Importar Excel';
-                    btnImportarExcel.disabled = false;
-                    inputExcel.value = ""; // Limpiamos el input
-                }
+                    alert("✅ Importación exitosa.");
+                } catch (error) { alert("Error al leer el archivo Excel."); } 
+                finally { btnImportarExcel.innerText = '📥 Importar Excel'; btnImportarExcel.disabled = false; inputExcel.value = ""; }
             };
-            
             lector.readAsArrayBuffer(archivo);
         });
 
@@ -299,101 +301,36 @@
         async function cargarInventario() {
             onSnapshot(refInventario, async (docSnap) => {
                 if (docSnap.exists()) {
-                    const datos = docSnap.data();
-                    const maizElem = document.getElementById('invMaiz');
-                    const bolsasElem = document.getElementById('invBolsas');
+                    inventarioActual = docSnap.data(); // Guardamos los datos para usarlos en el modal de edición
                     
-                    maizElem.innerText = datos.maiz_kg;
-                    bolsasElem.innerText = datos.bolsas_unidades;
+                    document.getElementById('invMaiz').innerText = inventarioActual.maiz_kg;
+                    document.getElementById('invBolsas').innerText = inventarioActual.bolsas_unidades;
+                    // Aseguramos compatibilidad si es la primera vez que se lee la base de datos vieja
+                    document.getElementById('invSoda').innerText = inventarioActual.soda_kg !== undefined ? inventarioActual.soda_kg : "0";
 
-                    maizElem.classList.toggle('alerta-roja', datos.maiz_kg < 50);
-                    bolsasElem.classList.toggle('alerta-roja', datos.bolsas_unidades < 500);
+                    // Alertas
+                    document.getElementById('invMaiz').classList.toggle('alerta-roja', inventarioActual.maiz_kg < 50);
+                    document.getElementById('invBolsas').classList.toggle('alerta-roja', inventarioActual.bolsas_unidades < 500);
+                    document.getElementById('invSoda').classList.toggle('alerta-roja', inventarioActual.soda_kg < 2);
                 } else {
-                    await setDoc(refInventario, { maiz_kg: 500, bolsas_unidades: 3000 });
+                    // Si no existe, creamos la bodega con valores base
+                    await setDoc(refInventario, { maiz_kg: 500, bolsas_unidades: 3000, soda_kg: 10 });
                 }
             });
         }
 
-        const modalCocina = document.getElementById('modalCocina');
-        document.getElementById('btnAbrirModalCocina').addEventListener('click', () => modalCocina.style.display = 'flex');
-        document.getElementById('btnCerrarModalCocina').addEventListener('click', () => modalCocina.style.display = 'none');
-
-        document.getElementById('formCocina').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const ollas = parseInt(document.getElementById('ollasCocinadas').value);
-            const gastoMaiz = ollas * 25;
-            const gastoBolsas = ollas * 160;
-
-            if(confirm(`Se van a descontar ${gastoMaiz}kg de maíz y ${gastoBolsas} bolsas. ¿Confirmar producción?`)) {
-                await updateDoc(refInventario, { maiz_kg: increment(-gastoMaiz), bolsas_unidades: increment(-gastoBolsas) });
-                modalCocina.style.display = 'none';
-                document.getElementById('formCocina').reset();
-            }
+        // --- LÓGICA: AJUSTAR BODEGA (NUEVO) ---
+        const modalAjuste = document.getElementById('modalAjuste');
+        document.getElementById('btnAbrirModalAjuste').addEventListener('click', () => {
+            // Llenamos las casillas con lo que hay actualmente en el sistema
+            document.getElementById('ajusteMaiz').value = inventarioActual.maiz_kg || 0;
+            document.getElementById('ajusteBolsas').value = inventarioActual.bolsas_unidades || 0;
+            document.getElementById('ajusteSoda').value = inventarioActual.soda_kg || 0;
+            modalAjuste.style.display = 'flex';
         });
+        document.getElementById('btnCerrarModalAjuste').addEventListener('click', () => modalAjuste.style.display = 'none');
 
-
-        // --- LÓGICA DE PEDIDOS Y TABLA ---
-        const modalPedido = document.getElementById('modalNuevoPedido');
-        document.getElementById('btnAbrirModal').addEventListener('click', () => modalPedido.style.display = 'flex');
-        document.getElementById('btnCerrarModal').addEventListener('click', () => modalPedido.style.display = 'none');
-
-        document.getElementById('formManual').addEventListener('submit', async (e) => {
+        document.getElementById('formAjuste').addEventListener('submit', async (e) => {
             e.preventDefault();
-            await addDoc(collection(db, "pedidos"), {
-                negocio: document.getElementById('manualNegocio').value,
-                contacto: document.getElementById('manualContacto').value || "N/A",
-                correo: "Pedido Telefónico",
-                telefono: document.getElementById('manualTelefono').value,
-                direccion: document.getElementById('manualDireccion').value,
-                cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value),
-                fecha: new Date().toISOString(),
-                estado: "Pendiente"
-            });
-            modalPedido.style.display = 'none';
-            document.getElementById('formManual').reset();
-        });
-
-        function cargarDatos() {
-            onSnapshot(query(collection(db, "pedidos"), orderBy("fecha", "desc")), (snapshot) => {
-                const cuerpoTabla = document.getElementById('cuerpoTabla');
-                cuerpoTabla.innerHTML = ''; 
-                let conteoPedidos = 0, sumaBolsas = 0;
-
-                snapshot.forEach((doc) => {
-                    const p = doc.data();
-                    conteoPedidos++;
-                    if (p.estado === "Pendiente") sumaBolsas += p.cantidad_bolsas;
-                    
-                    const fechaF = new Date(p.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
-                    let clase = p.estado === 'Entregado' ? 'entregado' : p.estado === 'Cancelado' ? 'cancelado' : 'pendiente';
-                    
-                    // Ícono especial si viene de Excel
-                    let icono = p.correo === "Pedido Telefónico" ? "📞 " : (p.origen === "Excel" ? "📊 " : "🌐 ");
-
-                    cuerpoTabla.innerHTML += `<tr>
-                        <td><small>${fechaF}</small></td>
-                        <td><strong>${icono}${p.negocio || 'N/A'}</strong></td>
-                        <td>${p.direccion || 'N/A'}</td>
-                        <td>${p.contacto || 'N/A'}<br><small>${p.telefono || ''}</small></td>
-                        <td><strong>${p.cantidad_bolsas}</strong></td>
-                        <td><span class="estado ${clase}">${p.estado}</span></td>
-                        <td><div class="acciones-grid">
-                            <button class="btn-accion btn-entregar" onclick="cambiarEstado('${doc.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
-                            <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${doc.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
-                            <button class="btn-accion btn-borrar" onclick="borrarPedido('${doc.id}')">🗑️</button>
-                        </div></td>
-                    </tr>`;
-                });
-
-                document.getElementById('totalPedidos').innerText = conteoPedidos;
-                document.getElementById('totalBolsas').innerText = sumaBolsas;
-                document.getElementById('totalOllas').innerText = Math.ceil(sumaBolsas / 160);
-                if(conteoPedidos === 0) cuerpoTabla.innerHTML = '<tr><td colspan="7" style="text-align: center;">Sin pedidos.</td></tr>';
-            });
-        }
-
-        window.cambiarEstado = async (id, estado) => { if(confirm(`¿Confirmar ${estado}?`)) await updateDoc(doc(db, "pedidos", id), { estado }); }
-        window.borrarPedido = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "pedidos", id)); }
-    </script>
-</body>
-</html>
+            // Sobrescribimos la base de datos con los valores exactos digitados
+            await updateDoc(refInventario, {
