@@ -287,6 +287,29 @@
     <div id="modalEmpleado" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEmpleado">&times;</span><h2>🧑‍🍳 Registrar Empleado</h2><form id="formEmpleado"><div class="grupo-form"><label>Nombre del Empleado:</label><input type="text" id="empNombre" required></div><div class="grupo-form"><label>Cargo / Rol:</label><input type="text" id="empCargo" required></div><div class="grupo-form"><label>Esquema de Pago:</label><select id="empTipoPago" required><option value="Por Olla Cocinada">Destajo (Pago por Olla)</option><option value="Salario Fijo Mensual">Salario Fijo Mensual</option><option value="Pago Diario">Pago Diario</option></select></div><div class="grupo-form"><label>Tarifa a pagar ($):</label><input type="number" id="empTarifa" required min="0"></div><button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Guardar Empleado</button></form></div></div>
     <div id="modalCliente" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCliente">&times;</span><h2>👥 Registrar Cliente</h2><form id="formCliente"><div class="grupo-form"><label>Nombre Negocio:</label><input type="text" id="clienteNegocio" required></div><div class="grupo-form"><label>Tipo:</label><select id="clienteTipo"><option value="Tienda">Tienda</option><option value="Vendedor">Distribuidor</option><option value="Mayorista">Mayorista</option></select></div><div class="grupo-form"><label>Teléfono:</label><input type="tel" id="clienteTelefono"></div><div class="grupo-form"><label>Precio Bolsa ($):</label><input type="number" id="clientePrecio" required min="1000"></div><button type="submit" class="btn-guardar-manual">Guardar</button></form></div></div>
 
+    <div id="modalConfirmarEntrega" class="modal no-print">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalEntrega">&times;</span>
+            <h2>✔️ Confirmar Entrega y Pago</h2>
+            <form id="formConfirmarEntrega">
+                <input type="hidden" id="entregaPedidoId">
+                <input type="hidden" id="entregaNegocio">
+                <div class="grupo-form">
+                    <label>¿Qué empleado/repartidor entregó este pedido?</label>
+                    <select id="entregaEmpleado" required>
+                        <option value="">Cargando empleados...</option>
+                    </select>
+                </div>
+                <div class="grupo-form">
+                    <label>Comisión / Pago por este viaje ($):</label>
+                    <input type="number" id="entregaPago" value="0" min="0" required>
+                    <small style="color:#666;">Si tiene salario fijo y no se le paga por esta entrega, déjalo en 0.</small>
+                </div>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #28a745;">Confirmar Entrega y Registrar</button>
+            </form>
+        </div>
+    </div>
+
     <div id="modalEditarPedido" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEditar">&times;</span><h2>✏️ Editar Pedido</h2><form id="formEditarPedido"><input type="hidden" id="editPedidoId"><div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="editCantidad" required min="1"></div><div class="grupo-form"><label>Precio Especial ($):</label><input type="number" id="editPrecio" required min="0"></div><div class="grupo-form" style="background: #f8fff9; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb; text-align: center; margin-bottom: 15px;"><label style="color: #155724; font-size: 14px; margin-bottom: 5px;">Total a Cobrar:</label><div id="editTotalDinamico" style="font-size: 28px; font-weight: bold; color: #28a745;">$0</div></div><button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Guardar Cambios</button></form></div></div>
     <div id="modalEditarEmpleado" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEditarEmp">&times;</span><h2>✏️ Editar Empleado</h2><form id="formEditarEmpleado"><input type="hidden" id="editEmpId"><div class="grupo-form"><label>Nombre:</label><input type="text" id="editEmpNombre" required></div><div class="grupo-form"><label>Cargo:</label><input type="text" id="editEmpCargo" required></div><div class="grupo-form"><label>Pago:</label><select id="editEmpTipoPago" required><option value="Por Olla Cocinada">Destajo</option><option value="Salario Fijo Mensual">Fijo Mensual</option><option value="Pago Diario">Diario</option></select></div><div class="grupo-form"><label>Tarifa ($):</label><input type="number" id="editEmpTarifa" required min="0"></div><button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Actualizar</button></form></div></div>
     <div id="modalEditarCliente" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEditarCli">&times;</span><h2>✏️ Editar Cliente</h2><form id="formEditarCliente"><input type="hidden" id="editCliId"><div class="grupo-form"><label>Negocio:</label><input type="text" id="editCliNegocio" required></div><div class="grupo-form"><label>Tipo:</label><select id="editCliTipo" required><option value="Tienda">Tienda</option><option value="Vendedor">Distribuidor</option><option value="Mayorista">Mayorista</option></select></div><div class="grupo-form"><label>Teléfono:</label><input type="tel" id="editCliTelefono"></div><div class="grupo-form"><label>Precio Bolsa ($):</label><input type="number" id="editCliPrecio" required min="1000"></div><button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Actualizar</button></form></div></div>
@@ -440,7 +463,23 @@
         document.getElementById('formEditarEmpleado').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "empleados", document.getElementById('editEmpId').value), { nombre: document.getElementById('editEmpNombre').value, cargo: document.getElementById('editEmpCargo').value, tipo_pago: document.getElementById('editEmpTipoPago').value, tarifa: parseInt(document.getElementById('editEmpTarifa').value) }); modalEditarEmp.style.display = 'none'; });
         window.borrarEmpleado = async (id) => { if(confirm("¿Eliminar empleado?")) await deleteDoc(doc(db, "empleados", id)); }
 
-        function cargarEmpleados() { onSnapshot(collection(db, "empleados"), (snapshot) => { const cuerpoE = document.getElementById('cuerpoTablaEmpleados'); cuerpoE.innerHTML = ''; if(snapshot.empty) cuerpoE.innerHTML = '<tr><td colspan="5" style="text-align: center;">Sin personal.</td></tr>'; snapshot.forEach((docEmp) => { const e = docEmp.data(); cuerpoE.innerHTML += `<tr><td><strong>${e.nombre}</strong></td><td>${e.cargo}</td><td>${e.tipo_pago}</td><td>$${e.tarifa.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarEmpleado('${docEmp.id}', '${e.nombre.replace(/'/g, "\\'")}', '${e.cargo.replace(/'/g, "\\'")}', '${e.tipo_pago}', ${e.tarifa})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarEmpleado('${docEmp.id}')">🗑️</button></div></td></tr>`; }); }); }
+        // Se modificó para llenar el select de entregas automáticamente
+        function cargarEmpleados() { 
+            onSnapshot(collection(db, "empleados"), (snapshot) => { 
+                const cuerpoE = document.getElementById('cuerpoTablaEmpleados'); 
+                const selectEntrega = document.getElementById('entregaEmpleado');
+                cuerpoE.innerHTML = ''; 
+                let opcionesEmpleados = '<option value="Ninguno / Yo mismo">Ninguno / Yo mismo</option>';
+
+                if(snapshot.empty) cuerpoE.innerHTML = '<tr><td colspan="5" style="text-align: center;">Sin personal.</td></tr>'; 
+                snapshot.forEach((docEmp) => { 
+                    const e = docEmp.data(); 
+                    cuerpoE.innerHTML += `<tr><td><strong>${e.nombre}</strong></td><td>${e.cargo}</td><td>${e.tipo_pago}</td><td>$${e.tarifa.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarEmpleado('${docEmp.id}', '${e.nombre.replace(/'/g, "\\'")}', '${e.cargo.replace(/'/g, "\\'")}', '${e.tipo_pago}', ${e.tarifa})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarEmpleado('${docEmp.id}')">🗑️</button></div></td></tr>`; 
+                    opcionesEmpleados += `<option value="${e.nombre}">${e.nombre} (${e.cargo})</option>`;
+                }); 
+                selectEntrega.innerHTML = opcionesEmpleados;
+            }); 
+        }
 
         // --- 4. CLIENTES ---
         const modalCliente = document.getElementById('modalCliente'); document.getElementById('btnAbrirModalCliente').addEventListener('click', () => modalCliente.style.display = 'flex'); document.getElementById('btnCerrarModalCliente').addEventListener('click', () => modalCliente.style.display = 'none');
@@ -455,7 +494,7 @@
                 directorioPrecios = {}; const cuerpoC = document.getElementById('cuerpoTablaClientes'); cuerpoC.innerHTML = '';
                 snapClientes.forEach((docCli) => { const c = docCli.data(); directorioPrecios[c.nombre.toLowerCase()] = c.precio_asignado; cuerpoC.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td><span class="estado" style="background-color:#e2e3e5; color:#383d41;">${c.tipo}</span></td><td>${c.telefono}</td><td style="color: #28a745; font-weight: bold;">$${c.precio_asignado.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarCliente('${docCli.id}', '${c.nombre.replace(/'/g, "\\'")}', '${c.tipo}', '${c.telefono || ''}', ${c.precio_asignado})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarCliente('${docCli.id}')">🗑️</button></div></td></tr>`; });
                 
-                // Pedidos (CON DIRECCIÓN Y TELÉFONO VISIBLES)
+                // Pedidos (El botón de entregar ahora abre el modal)
                 onSnapshot(query(collection(db, "pedidos"), orderBy("fecha", "desc")), (snapshot) => {
                     const cuerpoP = document.getElementById('cuerpoTablaPedidos'); cuerpoP.innerHTML = ''; let sumBolsas = 0, sumIngresos = 0; listaIngresosGlobal = []; 
                     snapshot.forEach((docPed) => {
@@ -480,7 +519,9 @@
                             <td class="no-print"><div class="acciones-grid">
                                 <button class="btn-factura" onclick="imprimirFactura('${p.negocio.replace(/'/g, "\\'")}', '${fechaF}', ${p.cantidad_bolsas}, ${precioAp}, ${totalP})">📄</button>
                                 <button class="btn-accion btn-editar" onclick="abrirEditarPedido('${docPed.id}', ${p.cantidad_bolsas}, ${precioAp})" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✏️</button>
-                                <button class="btn-accion btn-entregar" onclick="cambiarEstado('${docPed.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
+                                
+                                <button class="btn-accion btn-entregar" onclick="abrirModalEntrega('${docPed.id}', '${p.negocio.replace(/'/g, "\\'")}')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
+                                
                                 <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${docPed.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
                                 <button class="btn-accion btn-borrar" onclick="borrarPedido('${docPed.id}')">🗑️</button>
                             </div></td>
@@ -513,8 +554,44 @@
         const inputExcel = document.getElementById('inputExcel'); document.getElementById('btnImportarExcel').addEventListener('click', () => inputExcel.click());
         inputExcel.addEventListener('change', (e) => { const archivo = e.target.files[0]; if (!archivo) return; const lector = new FileReader(); lector.onload = async (evento) => { const filasJson = window.XLSX.utils.sheet_to_json(window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).Sheets[window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).SheetNames[0]]); for (let fila of filasJson) { if (fila.Negocio && fila.Cantidad) { await addDoc(collection(db, "pedidos"), { negocio: fila.Negocio.trim(), direccion: fila.Direccion || "Sin dirección", telefono: fila.Telefono || "Sin teléfono", cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value || fila.Cantidad), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Excel" }); } } inputExcel.value = ""; alert("✅ Importación exitosa."); }; lector.readAsArrayBuffer(archivo); });
 
+        // Función original solo para cancelar
         window.cambiarEstado = async (id, estado) => { if(confirm(`¿Confirmar ${estado}?`)) await updateDoc(doc(db, "pedidos", id), { estado }); }
         window.borrarPedido = async (id) => { if(confirm("¿Eliminar pedido?")) await deleteDoc(doc(db, "pedidos", id)); }
+
+        // --- NUEVA LÓGICA: Confirmar Entrega y Pagar ---
+        const modalConfirmarEntrega = document.getElementById('modalConfirmarEntrega');
+        document.getElementById('btnCerrarModalEntrega').addEventListener('click', () => modalConfirmarEntrega.style.display = 'none');
+        
+        window.abrirModalEntrega = function(id, negocio) {
+            document.getElementById('entregaPedidoId').value = id;
+            document.getElementById('entregaNegocio').value = negocio;
+            document.getElementById('entregaPago').value = 0; // Default a 0
+            modalConfirmarEntrega.style.display = 'flex';
+        }
+
+        document.getElementById('formConfirmarEntrega').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('entregaPedidoId').value;
+            const negocio = document.getElementById('entregaNegocio').value;
+            const empleado = document.getElementById('entregaEmpleado').value;
+            const pago = parseInt(document.getElementById('entregaPago').value);
+
+            // 1. Cambia el estado a entregado
+            await updateDoc(doc(db, "pedidos", id), { estado: 'Entregado' });
+
+            // 2. Si se ingresó un pago, crea el egreso automáticamente
+            if(pago > 0) {
+                await addDoc(collection(db, "gastos"), {
+                    concepto: `Pago a ${empleado} por entrega a ${negocio}`,
+                    monto: pago,
+                    fecha: new Date().toISOString()
+                });
+            }
+            
+            modalConfirmarEntrega.style.display = 'none';
+            document.getElementById('formConfirmarEntrega').reset();
+        });
+
 
         // --- 6. CALCULADORA (EDITAR PEDIDO) ---
         const modalEditarPedido = document.getElementById('modalEditarPedido'); document.getElementById('btnCerrarModalEditar').addEventListener('click', () => modalEditarPedido.style.display = 'none');
