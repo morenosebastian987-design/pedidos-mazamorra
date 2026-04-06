@@ -70,6 +70,7 @@
         .estado.pendiente { background-color: #fff3cd; color: #856404; }
         .estado.entregado { background-color: #d4edda; color: #155724; }
         .estado.cancelado { background-color: #f8d7da; color: #721c24; }
+        .estado.pagar { background-color: #ffe8a1; color: #856404; border: 1px solid #f5b041; cursor: pointer; }
         
         .acciones-grid { display: flex; gap: 5px; flex-wrap: wrap; }
         .btn-accion { padding: 5px 8px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; color: white; }
@@ -124,7 +125,7 @@
 
         <div class="contenedor">
             <div class="seccion-titulo">
-                <strong>📦 Bodega Valorizada (Inventario Físico)</strong>
+                <strong>📦 Bodega Valorizada (Paso 1: Inventario)</strong>
                 <div class="grupo-botones-header no-print">
                     <span class="indicador-capital" id="capitalBodega">Capital en Bodega: $0</span>
                     <button class="btn-nuevo" id="btnAbrirModalNuevoInsumo" style="background-color: #6f42c1; color: white;">+ Nuevo Insumo</button>
@@ -136,7 +137,7 @@
             </div>
 
             <div class="panel-produccion">
-                <h2>📋 Plan de Producción Sugerido (Basado en pedidos pendientes)</h2>
+                <h2>📋 Plan de Producción Sugerido (Paso 2: Cocinar)</h2>
                 <div class="receta-item olla"><div class="valor" id="planOllas">0</div><div class="etiqueta">Ollas a Montar</div></div>
                 <div class="receta-item"><div class="valor" id="planMaiz">0 kg</div><div class="etiqueta">Maíz Requerido</div></div>
                 <div class="receta-item"><div class="valor" id="planBolsas">0</div><div class="etiqueta">Bolsas Requeridas</div></div>
@@ -144,67 +145,7 @@
                 <button class="btn-produccion" id="btnAbrirModalCocina" style="width: 100%; margin-top: 10px; background-color: #28a745;">🍲 Ejecutar Producción (Descontar de Bodega)</button>
             </div>
 
-            <div class="seccion-titulo">
-                <strong>🧑‍🍳 Recursos Humanos y Nómina</strong>
-            </div>
-            <div class="panel-tabla">
-                <div class="panel-header">
-                    <h2>Personal Registrado</h2>
-                    <button class="btn-nuevo no-print" id="btnAbrirModalEmpleado" style="background-color: #17a2b8; color: white;">+ Nuevo Empleado</button>
-                </div>
-                <table id="tablaEmpleados">
-                    <thead><tr><th>Nombre</th><th>Cargo</th><th>Tipo de Pago</th><th>Tarifa Asignada ($)</th><th class="no-print">Acciones</th></tr></thead>
-                    <tbody id="cuerpoTablaEmpleados"></tbody>
-                </table>
-            </div>
-
-            <div class="seccion-titulo no-print">
-                <strong>👥 Directorio de Clientes y Vendedores</strong>
-            </div>
-            <div class="panel-tabla no-print">
-                <div class="panel-header">
-                    <h2>Lista de Precios Asignados</h2>
-                    <button class="btn-nuevo" id="btnAbrirModalCliente" style="background-color: #17a2b8; color: white;">+ Nuevo Cliente</button>
-                </div>
-                <table>
-                    <thead><tr><th>Nombre del Negocio</th><th>Tipo</th><th>Teléfono</th><th>Precio Asignado (x Bolsa)</th><th>Acciones</th></tr></thead>
-                    <tbody id="cuerpoTablaClientes"></tbody>
-                </table>
-            </div>
-
-            <div class="seccion-titulo">
-                <strong>📊 Balance Financiero y Gastos (P&G)</strong>
-                <div class="grupo-botones-header no-print">
-                    <button class="btn-excel" onclick="exportarBalanceFinanciero()">📊 Exportar Balance (Excel)</button>
-                </div>
-            </div>
-            <div class="resumen">
-                <div class="tarjeta"><h3>Bolsas Pendientes</h3><div class="numero" id="totalBolsas">0</div></div>
-                <div class="tarjeta tarjeta-dinero"><h3>Ingresos (Ventas)</h3><div class="numero" id="totalIngresos">$0</div></div>
-                <div class="tarjeta tarjeta-gasto"><h3>Egresos (Gastos)</h3><div class="numero" id="totalEgresos">$0</div></div>
-            </div>
-
-            <div class="panel-tabla">
-                <div class="panel-header">
-                    <h2>💸 Salidas de Dinero Operativas (Servicios, Nómina, Compras)</h2>
-                    <button class="btn-nuevo-gasto no-print" id="btnAbrirModalGasto">+ Registrar Gasto</button>
-                </div>
-                <table id="tablaGastos">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Concepto del Gasto</th>
-                            <th>Valor Pagado</th>
-                            <th class="no-print">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpoTablaGastos">
-                        <tr><td colspan="4" style="text-align: center;">Cargando gastos...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="seccion-titulo"><strong>📋 Rutas y Despachos</strong></div>
+            <div class="seccion-titulo"><strong>📋 Rutas y Despachos (Paso 3: Entregar Pedidos)</strong></div>
             <div class="panel-tabla">
                 <div class="panel-header">
                     <h2>Gestión de Ventas</h2>
@@ -230,6 +171,66 @@
                 </table>
             </div>
 
+            <div class="seccion-titulo">
+                <strong>📊 Balance Financiero (Paso 4: Finanzas y Pagos)</strong>
+                <div class="grupo-botones-header no-print">
+                    <button class="btn-excel" onclick="exportarBalanceFinanciero()">📊 Exportar Balance (Excel)</button>
+                </div>
+            </div>
+            <div class="resumen">
+                <div class="tarjeta"><h3>Bolsas Pendientes</h3><div class="numero" id="totalBolsas">0</div></div>
+                <div class="tarjeta tarjeta-dinero"><h3>Ingresos (Ventas)</h3><div class="numero" id="totalIngresos">$0</div></div>
+                <div class="tarjeta tarjeta-gasto"><h3>Egresos Efectivos (Pagados)</h3><div class="numero" id="totalEgresos">$0</div></div>
+            </div>
+
+            <div class="panel-tabla">
+                <div class="panel-header">
+                    <h2>💸 Gastos, Nómina y Cuentas por Pagar</h2>
+                    <button class="btn-nuevo-gasto no-print" id="btnAbrirModalGasto">+ Registrar Gasto Manual</button>
+                </div>
+                <table id="tablaGastos">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Concepto</th>
+                            <th>Valor</th>
+                            <th>Estado de Pago</th>
+                            <th class="no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoTablaGastos">
+                        <tr><td colspan="5" style="text-align: center;">Cargando gastos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="seccion-titulo">
+                <strong>🧑‍🍳 Configuración: Personal y Clientes</strong>
+            </div>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div class="panel-tabla" style="flex: 1; min-width: 300px;">
+                    <div class="panel-header">
+                        <h2>Personal Registrado</h2>
+                        <button class="btn-nuevo no-print" id="btnAbrirModalEmpleado" style="background-color: #17a2b8; color: white;">+ Nuevo</button>
+                    </div>
+                    <table id="tablaEmpleados">
+                        <thead><tr><th>Nombre</th><th>Tarifa ($)</th><th class="no-print">Acciones</th></tr></thead>
+                        <tbody id="cuerpoTablaEmpleados"></tbody>
+                    </table>
+                </div>
+
+                <div class="panel-tabla no-print" style="flex: 1; min-width: 300px;">
+                    <div class="panel-header">
+                        <h2>Directorio de Clientes</h2>
+                        <button class="btn-nuevo" id="btnAbrirModalCliente" style="background-color: #17a2b8; color: white;">+ Nuevo</button>
+                    </div>
+                    <table>
+                        <thead><tr><th>Negocio</th><th>Precio/Bolsa</th><th>Acciones</th></tr></thead>
+                        <tbody id="cuerpoTablaClientes"></tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -241,71 +242,35 @@
         <div class="fac-totales">TOTAL A PAGAR: <span id="facTotal"></span></div>
     </div>
 
-    <div id="modalNuevoInsumo" class="modal no-print">
-        <div class="modal-contenido">
-            <span class="cerrar" id="btnCerrarModalNuevoInsumo">&times;</span>
-            <h2>📦 Registrar Nuevo Insumo</h2>
-            <form id="formNuevoInsumo">
-                <div class="grupo-form"><label>Nombre del insumo:</label><input type="text" id="insumoNombre" required></div>
-                <div style="display: flex; gap: 10px;">
-                    <div class="grupo-form" style="flex: 1;"><label>Cantidad Inicial:</label><input type="number" id="insumoCant" required min="0" step="any"></div>
-                    <div class="grupo-form" style="flex: 1;"><label>Costo Unitario ($):</label><input type="number" id="insumoCosto" required min="0" step="any"></div>
-                </div>
-                <button type="submit" class="btn-guardar-manual" style="background-color: #6f42c1;">Crear Insumo</button>
-            </form>
-        </div>
-    </div>
+    <div id="modalNuevoInsumo" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalNuevoInsumo">&times;</span><h2>📦 Registrar Nuevo Insumo</h2><form id="formNuevoInsumo"><div class="grupo-form"><label>Nombre del insumo:</label><input type="text" id="insumoNombre" required></div><div style="display: flex; gap: 10px;"><div class="grupo-form" style="flex: 1;"><label>Cantidad Inicial:</label><input type="number" id="insumoCant" required min="0" step="any"></div><div class="grupo-form" style="flex: 1;"><label>Costo Unitario ($):</label><input type="number" id="insumoCosto" required min="0" step="any"></div></div><button type="submit" class="btn-guardar-manual" style="background-color: #6f42c1;">Crear Insumo</button></form></div></div>
     
-    <div id="modalAjuste" class="modal no-print">
-        <div class="modal-contenido">
-            <span class="cerrar" id="btnCerrarModalAjuste">&times;</span>
-            <h2>✏️ Ajustar Bodega y Costos</h2>
-            <form id="formAjuste">
-                <div id="inputsAjusteDinamico"></div>
-                <button type="submit" class="btn-guardar-manual" style="background-color: #6c757d;">Guardar Ajustes</button>
-            </form>
-        </div>
-    </div>
+    <div id="modalAjuste" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalAjuste">&times;</span><h2>✏️ Ajustar Bodega y Costos</h2><form id="formAjuste"><div id="inputsAjusteDinamico"></div><button type="submit" class="btn-guardar-manual" style="background-color: #6c757d;">Guardar Ajustes</button></form></div></div>
 
-    <div id="modalGasto" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalGasto">&times;</span><h2>💸 Registrar Gasto</h2><form id="formGasto"><div class="grupo-form"><label>Concepto:</label><input type="text" id="gastoConcepto" required></div><div class="grupo-form"><label>Valor Pagado ($):</label><input type="number" id="gastoValor" required min="100"></div><button type="submit" class="btn-guardar-manual" style="background-color: #dc3545;">Guardar Gasto</button></form></div></div>
-    <div id="modalCocina" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCocina">&times;</span><h2>🍲 Ejecutar Producción</h2><form id="formCocina"><div class="grupo-form"><label>Confirmar número de ollas cocinadas:</label><input type="number" id="ollasCocinadas" required min="1" value="1"></div><p style="font-size:12px; color:#666;">Se descontará la receta estándar de tu inventario físico.</p><button type="submit" class="btn-guardar-manual" style="background-color: #28a745;">Ejecutar y Descontar Inventario</button></form></div></div>
+    <div id="modalGasto" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalGasto">&times;</span><h2>💸 Registrar Gasto</h2><form id="formGasto"><div class="grupo-form"><label>Concepto:</label><input type="text" id="gastoConcepto" required></div><div class="grupo-form"><label>Valor ($):</label><input type="number" id="gastoValor" required min="100"></div><div class="grupo-form"><label>Estado del Pago:</label><select id="gastoEstado"><option value="Pagado">Ya lo pagué en efectivo/transferencia</option><option value="Pendiente">Pendiente por pagar (Cuenta por Pagar)</option></select></div><button type="submit" class="btn-guardar-manual" style="background-color: #dc3545;">Guardar Gasto</button></form></div></div>
     
-    <div id="modalNuevoPedido" class="modal no-print">
-        <div class="modal-contenido">
-            <span class="cerrar" id="btnCerrarModalPedido">&times;</span>
-            <h2>📞 Pedido Manual</h2>
-            <form id="formManual">
-                <div class="grupo-form"><label>Negocio / Cliente:</label><input type="text" id="manualNegocio" required></div>
-                <div class="grupo-form"><label>Dirección de Entrega:</label><input type="text" id="manualDireccion"></div>
-                <div class="grupo-form"><label>Teléfono:</label><input type="tel" id="manualTelefono"></div>
-                <div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div>
-                <button type="submit" class="btn-guardar-manual">Guardar Pedido</button>
-            </form>
-        </div>
-    </div>
-
+    <div id="modalCocina" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCocina">&times;</span><h2>🍲 Ejecutar Producción</h2><form id="formCocina"><div class="grupo-form"><label>Confirmar número de ollas cocinadas:</label><input type="number" id="ollasCocinadas" required min="1" value="1"></div><p style="font-size:12px; color:#666;">Se descontará la receta estándar de tu inventario físico automáticamente.</p><button type="submit" class="btn-guardar-manual" style="background-color: #28a745;">Ejecutar y Descontar Inventario</button></form></div></div>
+    
+    <div id="modalNuevoPedido" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalPedido">&times;</span><h2>📞 Pedido Manual</h2><form id="formManual"><div class="grupo-form"><label>Negocio / Cliente:</label><input type="text" id="manualNegocio" required></div><div class="grupo-form"><label>Dirección de Entrega:</label><input type="text" id="manualDireccion"></div><div class="grupo-form"><label>Teléfono:</label><input type="tel" id="manualTelefono"></div><div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div><button type="submit" class="btn-guardar-manual">Guardar Pedido</button></form></div></div>
     <div id="modalEmpleado" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEmpleado">&times;</span><h2>🧑‍🍳 Registrar Empleado</h2><form id="formEmpleado"><div class="grupo-form"><label>Nombre del Empleado:</label><input type="text" id="empNombre" required></div><div class="grupo-form"><label>Cargo / Rol:</label><input type="text" id="empCargo" required></div><div class="grupo-form"><label>Esquema de Pago:</label><select id="empTipoPago" required><option value="Por Olla Cocinada">Destajo (Pago por Olla)</option><option value="Salario Fijo Mensual">Salario Fijo Mensual</option><option value="Pago Diario">Pago Diario</option></select></div><div class="grupo-form"><label>Tarifa a pagar ($):</label><input type="number" id="empTarifa" required min="0"></div><button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Guardar Empleado</button></form></div></div>
     <div id="modalCliente" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCliente">&times;</span><h2>👥 Registrar Cliente</h2><form id="formCliente"><div class="grupo-form"><label>Nombre Negocio:</label><input type="text" id="clienteNegocio" required></div><div class="grupo-form"><label>Tipo:</label><select id="clienteTipo"><option value="Tienda">Tienda</option><option value="Vendedor">Distribuidor</option><option value="Mayorista">Mayorista</option></select></div><div class="grupo-form"><label>Teléfono:</label><input type="tel" id="clienteTelefono"></div><div class="grupo-form"><label>Precio Bolsa ($):</label><input type="number" id="clientePrecio" required min="1000"></div><button type="submit" class="btn-guardar-manual">Guardar</button></form></div></div>
 
     <div id="modalConfirmarEntrega" class="modal no-print">
         <div class="modal-contenido">
             <span class="cerrar" id="btnCerrarModalEntrega">&times;</span>
-            <h2>✔️ Confirmar Entrega y Pago</h2>
+            <h2>✔️ Confirmar Entrega y Nómina</h2>
             <form id="formConfirmarEntrega">
                 <input type="hidden" id="entregaPedidoId">
                 <input type="hidden" id="entregaNegocio">
                 <div class="grupo-form">
                     <label>¿Qué empleado/repartidor entregó este pedido?</label>
-                    <select id="entregaEmpleado" required>
-                        <option value="">Cargando empleados...</option>
-                    </select>
+                    <select id="entregaEmpleado" required><option value="">Cargando empleados...</option></select>
                 </div>
                 <div class="grupo-form">
                     <label>Comisión / Pago por este viaje ($):</label>
                     <input type="number" id="entregaPago" value="0" min="0" required>
-                    <small style="color:#666;">Si tiene salario fijo y no se le paga por esta entrega, déjalo en 0.</small>
+                    <small style="color:#666;">Si pones un valor, se creará un Gasto <strong>Pendiente de Pago</strong> automáticamente.</small>
                 </div>
-                <button type="submit" class="btn-guardar-manual" style="background-color: #28a745;">Confirmar Entrega y Registrar</button>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #28a745;">Confirmar Entrega</button>
             </form>
         </div>
     </div>
@@ -322,7 +287,7 @@
 
         // ⚠️ PEGA TUS LLAVES DE FIREBASE AQUÍ ⚠️
         const firebaseConfig = {
-  apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
+              apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
   authDomain: "pedidos-mazamorra.firebaseapp.com",
   projectId: "pedidos-mazamorra",
   storageBucket: "pedidos-mazamorra.firebasestorage.app",
@@ -348,11 +313,13 @@
         window.exportarBalanceFinanciero = function() {
             if (listaIngresosGlobal.length === 0 && listaGastosGlobal.length === 0) { alert("No hay datos financieros."); return; }
             let wb = window.XLSX.utils.book_new(); let wsIngresos = window.XLSX.utils.json_to_sheet(listaIngresosGlobal); let wsGastos = window.XLSX.utils.json_to_sheet(listaGastosGlobal);
-            let totalIn = listaIngresosGlobal.reduce((sum, item) => sum + item.Ingreso, 0); let totalOut = listaGastosGlobal.reduce((sum, item) => sum + item.Monto, 0);
+            let totalIn = listaIngresosGlobal.reduce((sum, item) => sum + item.Ingreso, 0); 
+            // Solo cuenta egresos pagados en el Excel
+            let totalOut = listaGastosGlobal.filter(g => g.Estado === 'Pagado').reduce((sum, item) => sum + item.Monto, 0);
             
             let wsResumen = window.XLSX.utils.json_to_sheet([
                 { "Concepto": "Total Ingresos Brutos", "Valor ($)": totalIn }, 
-                { "Concepto": "Total Gastos Operativos", "Valor ($)": totalOut }, 
+                { "Concepto": "Total Gastos (Pagados)", "Valor ($)": totalOut }, 
                 { "Concepto": "UTILIDAD NETA", "Valor ($)": (totalIn - totalOut) },
                 { "Concepto": "---", "Valor ($)": "---" },
                 { "Concepto": "Capital Inmovilizado (Bodega)", "Valor ($)": capitalTotalBodega }
@@ -362,15 +329,14 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) { document.getElementById('pantalla-login').style.display = 'none'; document.getElementById('pantalla-dashboard').style.display = 'block'; document.getElementById('correo-usuario').innerText = user.email; 
-                iniciarEscuchasBodega(); 
-                cargarGastos(); cargarEmpleados(); cargarClientesYPedidos(); 
+                iniciarEscuchasBodega(); cargarGastos(); cargarEmpleados(); cargarClientesYPedidos(); 
             } else { document.getElementById('pantalla-login').style.display = 'flex'; document.getElementById('pantalla-dashboard').style.display = 'none'; }
         });
 
         document.getElementById('btnIngresar').addEventListener('click', () => { signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(() => { document.getElementById('mensaje-error').style.display = 'block'; }); });
         document.getElementById('btnSalir').addEventListener('click', () => { signOut(auth); });
 
-        // --- 1. INVENTARIO ---
+        // --- 1. INVENTARIO INTELIGENTE ---
         const refInventario = doc(db, "bodega", "insumos_principales");
         const refCostos = doc(db, "bodega", "costos_insumos"); 
 
@@ -390,70 +356,85 @@
         function renderizarBodega() {
             const contenedor = document.getElementById('contenedorInventario');
             contenedor.innerHTML = ''; capitalTotalBodega = 0;
-
             for (const [nombre, cantidad] of Object.entries(inventarioActual)) {
-                let costoUnitario = costosActuales[nombre] || 0;
-                let costoTotalFila = cantidad * costoUnitario;
-                capitalTotalBodega += costoTotalFila;
-
-                contenedor.innerHTML += `
-                    <div class="tarjeta-inv">
-                        <h3>${nombre}</h3>
-                        <div class="numero ${(cantidad < 10) ? 'alerta-roja' : ''}">${cantidad}</div>
-                        <div class="costo-info">Costo x Unidad: $${costoUnitario.toLocaleString('es-CO')}</div>
-                        <div class="costo-total">Total: $${costoTotalFila.toLocaleString('es-CO')}</div>
-                    </div>`;
+                let costoUnitario = costosActuales[nombre] || 0; let costoTotalFila = cantidad * costoUnitario; capitalTotalBodega += costoTotalFila;
+                contenedor.innerHTML += `<div class="tarjeta-inv"><h3>${nombre}</h3><div class="numero ${(cantidad < 10) ? 'alerta-roja' : ''}">${cantidad}</div><div class="costo-info">Costo x Unidad: $${costoUnitario.toLocaleString('es-CO')}</div><div class="costo-total">Total: $${costoTotalFila.toLocaleString('es-CO')}</div></div>`;
             }
             document.getElementById('capitalBodega').innerText = `Capital en Bodega: $${capitalTotalBodega.toLocaleString('es-CO')}`;
         }
 
         const modalNuevoInsumo = document.getElementById('modalNuevoInsumo'); document.getElementById('btnAbrirModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'flex'); document.getElementById('btnCerrarModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'none');
-        document.getElementById('formNuevoInsumo').addEventListener('submit', async (e) => { 
-            e.preventDefault(); const n = document.getElementById('insumoNombre').value.replace(/ /g, "_"); const cant = parseFloat(document.getElementById('insumoCant').value); const costo = parseFloat(document.getElementById('insumoCosto').value);
-            await updateDoc(refInventario, { [n]: cant }); await updateDoc(refCostos, { [n]: costo });
-            modalNuevoInsumo.style.display = 'none'; document.getElementById('formNuevoInsumo').reset(); 
-        });
+        document.getElementById('formNuevoInsumo').addEventListener('submit', async (e) => { e.preventDefault(); const n = document.getElementById('insumoNombre').value.replace(/ /g, "_"); const cant = parseFloat(document.getElementById('insumoCant').value); const costo = parseFloat(document.getElementById('insumoCosto').value); await updateDoc(refInventario, { [n]: cant }); await updateDoc(refCostos, { [n]: costo }); modalNuevoInsumo.style.display = 'none'; document.getElementById('formNuevoInsumo').reset(); });
 
         const modalAjuste = document.getElementById('modalAjuste');
         document.getElementById('btnAbrirModalAjuste').addEventListener('click', () => {
             const inputsContainer = document.getElementById('inputsAjusteDinamico'); inputsContainer.innerHTML = '';
             for (const [nombre, cantidad] of Object.entries(inventarioActual)) {
                 let costoActual = costosActuales[nombre] || 0;
-                inputsContainer.innerHTML += `
-                <div style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
-                    <label style="color:#f5b041;">${nombre}</label>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <div style="flex:1;"><label style="font-weight:normal;">Cantidad:</label><input type="number" id="ajustecant_${nombre}" value="${cantidad}" required step="any" min="0"></div>
-                        <div style="flex:1;"><label style="font-weight:normal;">Costo Unit. ($):</label><input type="number" id="ajustecosto_${nombre}" value="${costoActual}" required step="any" min="0"></div>
-                        <button type="button" class="btn-accion btn-borrar" style="margin-top:22px; padding:10px;" onclick="eliminarInsumo('${nombre}')" title="Borrar del Inventario">🗑️</button>
-                    </div>
-                </div>`;
+                inputsContainer.innerHTML += `<div style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;"><label style="color:#f5b041;">${nombre}</label><div style="display:flex; gap:10px; align-items:center;"><div style="flex:1;"><label style="font-weight:normal;">Cantidad:</label><input type="number" id="ajustecant_${nombre}" value="${cantidad}" required step="any" min="0"></div><div style="flex:1;"><label style="font-weight:normal;">Costo Unit. ($):</label><input type="number" id="ajustecosto_${nombre}" value="${costoActual}" required step="any" min="0"></div><button type="button" class="btn-accion btn-borrar" style="margin-top:22px; padding:10px;" onclick="eliminarInsumo('${nombre}')" title="Borrar">🗑️</button></div></div>`;
             }
             modalAjuste.style.display = 'flex';
         });
         document.getElementById('btnCerrarModalAjuste').addEventListener('click', () => modalAjuste.style.display = 'none');
         
-        document.getElementById('formAjuste').addEventListener('submit', async (e) => { 
-            e.preventDefault(); let nuevasCantidades = {}; let nuevosCostos = {};
-            for (const n of Object.keys(inventarioActual)) { nuevasCantidades[n] = parseFloat(document.getElementById(`ajustecant_${n}`).value); nuevosCostos[n] = parseFloat(document.getElementById(`ajustecosto_${n}`).value); } 
-            await updateDoc(refInventario, nuevasCantidades); await updateDoc(refCostos, nuevosCostos);
-            modalAjuste.style.display = 'none'; 
-        });
-        
+        document.getElementById('formAjuste').addEventListener('submit', async (e) => { e.preventDefault(); let nuevasCantidades = {}; let nuevosCostos = {}; for (const n of Object.keys(inventarioActual)) { nuevasCantidades[n] = parseFloat(document.getElementById(`ajustecant_${n}`).value); nuevosCostos[n] = parseFloat(document.getElementById(`ajustecosto_${n}`).value); } await updateDoc(refInventario, nuevasCantidades); await updateDoc(refCostos, nuevosCostos); modalAjuste.style.display = 'none'; });
         window.eliminarInsumo = async function(nombre) { if(confirm(`¿Estás seguro de ELIMINAR el insumo "${nombre}" por completo?`)) { await updateDoc(refInventario, { [nombre]: deleteField() }); await updateDoc(refCostos, { [nombre]: deleteField() }); modalAjuste.style.display = 'none'; document.getElementById('btnAbrirModalAjuste').click(); } }
 
+        // PRODUCCIÓN (Corregida para que busque inteligentemente la llave sin importar como se llame)
         const modalCocina = document.getElementById('modalCocina'); document.getElementById('btnAbrirModalCocina').addEventListener('click', () => { document.getElementById('ollasCocinadas').value = parseInt(document.getElementById('planOllas').innerText) || 1; modalCocina.style.display = 'flex'; }); document.getElementById('btnCerrarModalCocina').addEventListener('click', () => modalCocina.style.display = 'none');
-        document.getElementById('formCocina').addEventListener('submit', async (e) => { e.preventDefault(); const ollas = parseInt(document.getElementById('ollasCocinadas').value); if(confirm(`Se descontarán insumos para ${ollas} olla(s). ¿Continuar?`)) { let desc = {}; if(inventarioActual["Maiz_Amarillo_Kg"] !== undefined) desc["Maiz_Amarillo_Kg"] = increment(-(ollas * 25)); if(inventarioActual["Bolsas_Zenner_Und"] !== undefined) desc["Bolsas_Zenner_Und"] = increment(-(ollas * 160)); if(inventarioActual["Soda_Caustica_Kg"] !== undefined) desc["Soda_Caustica_Kg"] = increment(-(ollas * 0.5)); await updateDoc(refInventario, desc); modalCocina.style.display = 'none'; document.getElementById('formCocina').reset(); } });
+        document.getElementById('formCocina').addEventListener('submit', async (e) => { 
+            e.preventDefault(); const ollas = parseInt(document.getElementById('ollasCocinadas').value); 
+            if(confirm(`Se descontarán insumos para ${ollas} olla(s). ¿Continuar?`)) { 
+                let desc = {}; 
+                // Busca dinámicamente las llaves correctas en tu base de datos
+                const llaves = Object.keys(inventarioActual);
+                const llaveMaiz = llaves.find(k => k.toLowerCase().includes('maiz') || k.toLowerCase().includes('maíz'));
+                const llaveBolsas = llaves.find(k => k.toLowerCase().includes('bolsa'));
+                const llaveSoda = llaves.find(k => k.toLowerCase().includes('soda'));
 
-        // --- 2. GASTOS ---
+                if(llaveMaiz) desc[llaveMaiz] = increment(-(ollas * 25)); 
+                if(llaveBolsas) desc[llaveBolsas] = increment(-(ollas * 160)); 
+                if(llaveSoda) desc[llaveSoda] = increment(-(ollas * 0.5)); 
+                
+                await updateDoc(refInventario, desc); modalCocina.style.display = 'none'; document.getElementById('formCocina').reset(); 
+                alert("¡Producción Ejecutada! Insumos descontados de Bodega.");
+            } 
+        });
+
+        // --- 2. GASTOS Y CUENTAS POR PAGAR ---
         const modalGasto = document.getElementById('modalGasto'); document.getElementById('btnAbrirModalGasto').addEventListener('click', () => modalGasto.style.display = 'flex'); document.getElementById('btnCerrarModalGasto').addEventListener('click', () => modalGasto.style.display = 'none');
-        document.getElementById('formGasto').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "gastos"), { concepto: document.getElementById('gastoConcepto').value, monto: parseInt(document.getElementById('gastoValor').value), fecha: new Date().toISOString() }); modalGasto.style.display = 'none'; document.getElementById('formGasto').reset(); });
+        document.getElementById('formGasto').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "gastos"), { concepto: document.getElementById('gastoConcepto').value, monto: parseInt(document.getElementById('gastoValor').value), fecha: new Date().toISOString(), estado: document.getElementById('gastoEstado').value }); modalGasto.style.display = 'none'; document.getElementById('formGasto').reset(); });
+        
         const modalEditarGasto = document.getElementById('modalEditarGasto'); document.getElementById('btnCerrarModalEditarGas').addEventListener('click', () => modalEditarGasto.style.display = 'none');
         window.abrirEditarGasto = function(id, concepto, monto) { document.getElementById('editGasId').value = id; document.getElementById('editGasConcepto').value = concepto; document.getElementById('editGasValor').value = monto; modalEditarGasto.style.display = 'flex'; }
         document.getElementById('formEditarGasto').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "gastos", document.getElementById('editGasId').value), { concepto: document.getElementById('editGasConcepto').value, monto: parseInt(document.getElementById('editGasValor').value) }); modalEditarGasto.style.display = 'none'; });
-        window.borrarGasto = async (id) => { if(confirm("¿Eliminar este gasto?")) await deleteDoc(doc(db, "gastos", id)); }
+        window.borrarGasto = async (id) => { if(confirm("¿Eliminar este registro?")) await deleteDoc(doc(db, "gastos", id)); }
+        
+        // NUEVA FUNCIÓN: Pagar un gasto pendiente
+        window.pagarGastoPendiente = async (id) => { if(confirm("¿Confirmar que ya pagaste este dinero (Saldar deuda)?")) await updateDoc(doc(db, "gastos", id), { estado: 'Pagado' }); }
 
-        function cargarGastos() { onSnapshot(query(collection(db, "gastos"), orderBy("fecha", "desc")), (snapshot) => { const cuerpoG = document.getElementById('cuerpoTablaGastos'); cuerpoG.innerHTML = ''; let total = 0; listaGastosGlobal = []; snapshot.forEach((docG) => { const g = docG.data(); total += g.monto; const fechaF = new Date(g.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short' }); listaGastosGlobal.push({ Fecha: fechaF, Concepto: g.concepto, Monto: g.monto }); cuerpoG.innerHTML += `<tr><td>${fechaF}</td><td><strong>${g.concepto}</strong></td><td style="color: #dc3545; font-weight:bold;">-$${g.monto.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarGasto('${docG.id}', '${g.concepto.replace(/'/g, "\\'")}', ${g.monto})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarGasto('${docG.id}')">🗑️</button></div></td></tr>`; }); document.getElementById('totalEgresos').innerText = "-$" + total.toLocaleString('es-CO'); if(total === 0) cuerpoG.innerHTML = '<tr><td colspan="4" style="text-align: center;">Sin gastos registrados.</td></tr>'; }); }
+        function cargarGastos() { 
+            onSnapshot(query(collection(db, "gastos"), orderBy("fecha", "desc")), (snapshot) => { 
+                const cuerpoG = document.getElementById('cuerpoTablaGastos'); cuerpoG.innerHTML = ''; 
+                let totalEgresosPagados = 0; listaGastosGlobal = []; 
+                snapshot.forEach((docG) => { 
+                    const g = docG.data(); 
+                    const estadoGasto = g.estado || 'Pagado'; // Por defecto antiguo
+                    
+                    // Solo suma al P&G si ya fue pagado
+                    if (estadoGasto === 'Pagado') { totalEgresosPagados += g.monto; }
+
+                    const fechaF = new Date(g.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short' }); 
+                    listaGastosGlobal.push({ Fecha: fechaF, Concepto: g.concepto, Monto: g.monto, Estado: estadoGasto }); 
+                    
+                    let btnPagar = estadoGasto === 'Pendiente' ? `<button class="estado pagar" onclick="pagarGastoPendiente('${docG.id}')">💲 Pagar Ahora</button>` : `<span class="estado entregado">Ya Pagado</span>`;
+
+                    cuerpoG.innerHTML += `<tr><td>${fechaF}</td><td><strong>${g.concepto}</strong></td><td style="color: #dc3545; font-weight:bold;">$${g.monto.toLocaleString('es-CO')}</td><td>${btnPagar}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarGasto('${docG.id}', '${g.concepto.replace(/'/g, "\\'")}', ${g.monto})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarGasto('${docG.id}')">🗑️</button></div></td></tr>`; 
+                }); 
+                document.getElementById('totalEgresos').innerText = "-$" + totalEgresosPagados.toLocaleString('es-CO'); 
+                if(snapshot.empty) cuerpoG.innerHTML = '<tr><td colspan="5" style="text-align: center;">Sin registros.</td></tr>'; 
+            }); 
+        }
 
         // --- 3. RECURSOS HUMANOS ---
         const modalEmpleado = document.getElementById('modalEmpleado'); document.getElementById('btnAbrirModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'flex'); document.getElementById('btnCerrarModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'none');
@@ -463,18 +444,15 @@
         document.getElementById('formEditarEmpleado').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "empleados", document.getElementById('editEmpId').value), { nombre: document.getElementById('editEmpNombre').value, cargo: document.getElementById('editEmpCargo').value, tipo_pago: document.getElementById('editEmpTipoPago').value, tarifa: parseInt(document.getElementById('editEmpTarifa').value) }); modalEditarEmp.style.display = 'none'; });
         window.borrarEmpleado = async (id) => { if(confirm("¿Eliminar empleado?")) await deleteDoc(doc(db, "empleados", id)); }
 
-        // Se modificó para llenar el select de entregas automáticamente
         function cargarEmpleados() { 
             onSnapshot(collection(db, "empleados"), (snapshot) => { 
                 const cuerpoE = document.getElementById('cuerpoTablaEmpleados'); 
                 const selectEntrega = document.getElementById('entregaEmpleado');
-                cuerpoE.innerHTML = ''; 
-                let opcionesEmpleados = '<option value="Ninguno / Yo mismo">Ninguno / Yo mismo</option>';
-
-                if(snapshot.empty) cuerpoE.innerHTML = '<tr><td colspan="5" style="text-align: center;">Sin personal.</td></tr>'; 
+                cuerpoE.innerHTML = ''; let opcionesEmpleados = '<option value="Ninguno / Yo mismo">Ninguno / Yo mismo</option>';
+                if(snapshot.empty) cuerpoE.innerHTML = '<tr><td colspan="3" style="text-align: center;">Sin personal.</td></tr>'; 
                 snapshot.forEach((docEmp) => { 
                     const e = docEmp.data(); 
-                    cuerpoE.innerHTML += `<tr><td><strong>${e.nombre}</strong></td><td>${e.cargo}</td><td>${e.tipo_pago}</td><td>$${e.tarifa.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarEmpleado('${docEmp.id}', '${e.nombre.replace(/'/g, "\\'")}', '${e.cargo.replace(/'/g, "\\'")}', '${e.tipo_pago}', ${e.tarifa})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarEmpleado('${docEmp.id}')">🗑️</button></div></td></tr>`; 
+                    cuerpoE.innerHTML += `<tr><td><strong>${e.nombre}</strong><br><span style="font-size:10px; color:#666;">${e.cargo}</span></td><td>$${e.tarifa.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarEmpleado('${docEmp.id}', '${e.nombre.replace(/'/g, "\\'")}', '${e.cargo.replace(/'/g, "\\'")}', '${e.tipo_pago}', ${e.tarifa})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarEmpleado('${docEmp.id}')">🗑️</button></div></td></tr>`; 
                     opcionesEmpleados += `<option value="${e.nombre}">${e.nombre} (${e.cargo})</option>`;
                 }); 
                 selectEntrega.innerHTML = opcionesEmpleados;
@@ -492,9 +470,9 @@
         function cargarClientesYPedidos() {
             onSnapshot(collection(db, "clientes"), (snapClientes) => {
                 directorioPrecios = {}; const cuerpoC = document.getElementById('cuerpoTablaClientes'); cuerpoC.innerHTML = '';
-                snapClientes.forEach((docCli) => { const c = docCli.data(); directorioPrecios[c.nombre.toLowerCase()] = c.precio_asignado; cuerpoC.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td><span class="estado" style="background-color:#e2e3e5; color:#383d41;">${c.tipo}</span></td><td>${c.telefono}</td><td style="color: #28a745; font-weight: bold;">$${c.precio_asignado.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarCliente('${docCli.id}', '${c.nombre.replace(/'/g, "\\'")}', '${c.tipo}', '${c.telefono || ''}', ${c.precio_asignado})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarCliente('${docCli.id}')">🗑️</button></div></td></tr>`; });
+                snapClientes.forEach((docCli) => { const c = docCli.data(); directorioPrecios[c.nombre.toLowerCase()] = c.precio_asignado; cuerpoC.innerHTML += `<tr><td><strong>${c.nombre}</strong><br><span style="font-size:10px; color:#666;">📞 ${c.telefono}</span></td><td style="color: #28a745; font-weight: bold;">$${c.precio_asignado.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarCliente('${docCli.id}', '${c.nombre.replace(/'/g, "\\'")}', '${c.tipo}', '${c.telefono || ''}', ${c.precio_asignado})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarCliente('${docCli.id}')">🗑️</button></div></td></tr>`; });
                 
-                // Pedidos (El botón de entregar ahora abre el modal)
+                // Pedidos 
                 onSnapshot(query(collection(db, "pedidos"), orderBy("fecha", "desc")), (snapshot) => {
                     const cuerpoP = document.getElementById('cuerpoTablaPedidos'); cuerpoP.innerHTML = ''; let sumBolsas = 0, sumIngresos = 0; listaIngresosGlobal = []; 
                     snapshot.forEach((docPed) => {
@@ -507,11 +485,7 @@
 
                         cuerpoP.innerHTML += `<tr>
                             <td><small>${fechaF}</small></td>
-                            <td>
-                                <strong>${p.negocio || 'N/A'}</strong><br>
-                                <span style="font-size:11px; color:#666;">📍 ${p.direccion || 'Sin dirección'}</span><br>
-                                <span style="font-size:11px; color:#666;">📞 ${p.telefono || 'Sin teléfono'}</span>
-                            </td>
+                            <td><strong>${p.negocio || 'N/A'}</strong><br><span style="font-size:11px; color:#666;">📍 ${p.direccion || 'Sin dirección'}</span><br><span style="font-size:11px; color:#666;">📞 ${p.telefono || 'Sin teléfono'}</span></td>
                             <td style="${estPrec}">$${precioAp.toLocaleString('es-CO')}${alerPrec}</td>
                             <td><strong>${p.cantidad_bolsas}</strong></td>
                             <td style="color: #28a745; font-weight: bold;">$${totalP.toLocaleString('es-CO')}</td>
@@ -519,9 +493,7 @@
                             <td class="no-print"><div class="acciones-grid">
                                 <button class="btn-factura" onclick="imprimirFactura('${p.negocio.replace(/'/g, "\\'")}', '${fechaF}', ${p.cantidad_bolsas}, ${precioAp}, ${totalP})">📄</button>
                                 <button class="btn-accion btn-editar" onclick="abrirEditarPedido('${docPed.id}', ${p.cantidad_bolsas}, ${precioAp})" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✏️</button>
-                                
                                 <button class="btn-accion btn-entregar" onclick="abrirModalEntrega('${docPed.id}', '${p.negocio.replace(/'/g, "\\'")}')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
-                                
                                 <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${docPed.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
                                 <button class="btn-accion btn-borrar" onclick="borrarPedido('${docPed.id}')">🗑️</button>
                             </div></td>
@@ -536,62 +508,23 @@
 
         // --- 5. PEDIDOS MANUALES Y EXCEL ---
         const modalNuevoPedido = document.getElementById('modalNuevoPedido'); document.getElementById('btnAbrirModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'flex'); document.getElementById('btnCerrarModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'none'); 
-        document.getElementById('formManual').addEventListener('submit', async (e) => { 
-            e.preventDefault(); 
-            await addDoc(collection(db, "pedidos"), { 
-                negocio: document.getElementById('manualNegocio').value.trim(), 
-                direccion: document.getElementById('manualDireccion').value.trim(),
-                telefono: document.getElementById('manualTelefono').value.trim(),
-                cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value), 
-                fecha: new Date().toISOString(), 
-                estado: "Pendiente", 
-                origen: "Manual" 
-            }); 
-            modalNuevoPedido.style.display = 'none'; 
-            document.getElementById('formManual').reset(); 
-        });
+        document.getElementById('formManual').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "pedidos"), { negocio: document.getElementById('manualNegocio').value.trim(), direccion: document.getElementById('manualDireccion').value.trim(), telefono: document.getElementById('manualTelefono').value.trim(), cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Manual" }); modalNuevoPedido.style.display = 'none'; document.getElementById('formManual').reset(); });
         
         const inputExcel = document.getElementById('inputExcel'); document.getElementById('btnImportarExcel').addEventListener('click', () => inputExcel.click());
         inputExcel.addEventListener('change', (e) => { const archivo = e.target.files[0]; if (!archivo) return; const lector = new FileReader(); lector.onload = async (evento) => { const filasJson = window.XLSX.utils.sheet_to_json(window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).Sheets[window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).SheetNames[0]]); for (let fila of filasJson) { if (fila.Negocio && fila.Cantidad) { await addDoc(collection(db, "pedidos"), { negocio: fila.Negocio.trim(), direccion: fila.Direccion || "Sin dirección", telefono: fila.Telefono || "Sin teléfono", cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value || fila.Cantidad), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Excel" }); } } inputExcel.value = ""; alert("✅ Importación exitosa."); }; lector.readAsArrayBuffer(archivo); });
 
-        // Función original solo para cancelar
         window.cambiarEstado = async (id, estado) => { if(confirm(`¿Confirmar ${estado}?`)) await updateDoc(doc(db, "pedidos", id), { estado }); }
         window.borrarPedido = async (id) => { if(confirm("¿Eliminar pedido?")) await deleteDoc(doc(db, "pedidos", id)); }
 
-        // --- NUEVA LÓGICA: Confirmar Entrega y Pagar ---
-        const modalConfirmarEntrega = document.getElementById('modalConfirmarEntrega');
-        document.getElementById('btnCerrarModalEntrega').addEventListener('click', () => modalConfirmarEntrega.style.display = 'none');
-        
-        window.abrirModalEntrega = function(id, negocio) {
-            document.getElementById('entregaPedidoId').value = id;
-            document.getElementById('entregaNegocio').value = negocio;
-            document.getElementById('entregaPago').value = 0; // Default a 0
-            modalConfirmarEntrega.style.display = 'flex';
-        }
-
+        // --- AUTOMATIZACIÓN DE ENTREGAS ---
+        const modalConfirmarEntrega = document.getElementById('modalConfirmarEntrega'); document.getElementById('btnCerrarModalEntrega').addEventListener('click', () => modalConfirmarEntrega.style.display = 'none');
+        window.abrirModalEntrega = function(id, negocio) { document.getElementById('entregaPedidoId').value = id; document.getElementById('entregaNegocio').value = negocio; document.getElementById('entregaPago').value = 0; modalConfirmarEntrega.style.display = 'flex'; }
         document.getElementById('formConfirmarEntrega').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('entregaPedidoId').value;
-            const negocio = document.getElementById('entregaNegocio').value;
-            const empleado = document.getElementById('entregaEmpleado').value;
-            const pago = parseInt(document.getElementById('entregaPago').value);
-
-            // 1. Cambia el estado a entregado
-            await updateDoc(doc(db, "pedidos", id), { estado: 'Entregado' });
-
-            // 2. Si se ingresó un pago, crea el egreso automáticamente
-            if(pago > 0) {
-                await addDoc(collection(db, "gastos"), {
-                    concepto: `Pago a ${empleado} por entrega a ${negocio}`,
-                    monto: pago,
-                    fecha: new Date().toISOString()
-                });
-            }
-            
-            modalConfirmarEntrega.style.display = 'none';
-            document.getElementById('formConfirmarEntrega').reset();
+            e.preventDefault(); const id = document.getElementById('entregaPedidoId').value; const negocio = document.getElementById('entregaNegocio').value; const empleado = document.getElementById('entregaEmpleado').value; const pago = parseInt(document.getElementById('entregaPago').value);
+            await updateDoc(doc(db, "pedidos", id), { estado: 'Entregado' }); // Pedido a ingresos
+            if(pago > 0) { await addDoc(collection(db, "gastos"), { concepto: `Pago a ${empleado} por entrega a ${negocio}`, monto: pago, fecha: new Date().toISOString(), estado: 'Pendiente' }); } // Pago a Cuentas por Pagar
+            modalConfirmarEntrega.style.display = 'none'; document.getElementById('formConfirmarEntrega').reset();
         });
-
 
         // --- 6. CALCULADORA (EDITAR PEDIDO) ---
         const modalEditarPedido = document.getElementById('modalEditarPedido'); document.getElementById('btnCerrarModalEditar').addEventListener('click', () => modalEditarPedido.style.display = 'none');
