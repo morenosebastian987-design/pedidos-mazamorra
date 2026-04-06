@@ -218,7 +218,7 @@
                     <thead>
                         <tr>
                             <th>Fecha</th>
-                            <th>Negocio</th>
+                            <th>Información de Entrega</th>
                             <th>Precio/Bolsa</th>
                             <th>Bolsas</th>
                             <th>Total Cobrar</th>
@@ -269,7 +269,21 @@
 
     <div id="modalGasto" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalGasto">&times;</span><h2>💸 Registrar Gasto</h2><form id="formGasto"><div class="grupo-form"><label>Concepto:</label><input type="text" id="gastoConcepto" required></div><div class="grupo-form"><label>Valor Pagado ($):</label><input type="number" id="gastoValor" required min="100"></div><button type="submit" class="btn-guardar-manual" style="background-color: #dc3545;">Guardar Gasto</button></form></div></div>
     <div id="modalCocina" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCocina">&times;</span><h2>🍲 Ejecutar Producción</h2><form id="formCocina"><div class="grupo-form"><label>Confirmar número de ollas cocinadas:</label><input type="number" id="ollasCocinadas" required min="1" value="1"></div><p style="font-size:12px; color:#666;">Se descontará la receta estándar de tu inventario físico.</p><button type="submit" class="btn-guardar-manual" style="background-color: #28a745;">Ejecutar y Descontar Inventario</button></form></div></div>
-    <div id="modalNuevoPedido" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalPedido">&times;</span><h2>📞 Pedido Manual</h2><form id="formManual"><div class="grupo-form"><label>Negocio:</label><input type="text" id="manualNegocio" required></div><div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div><button type="submit" class="btn-guardar-manual">Guardar Pedido</button></form></div></div>
+    
+    <div id="modalNuevoPedido" class="modal no-print">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalPedido">&times;</span>
+            <h2>📞 Pedido Manual</h2>
+            <form id="formManual">
+                <div class="grupo-form"><label>Negocio / Cliente:</label><input type="text" id="manualNegocio" required></div>
+                <div class="grupo-form"><label>Dirección de Entrega:</label><input type="text" id="manualDireccion"></div>
+                <div class="grupo-form"><label>Teléfono:</label><input type="tel" id="manualTelefono"></div>
+                <div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div>
+                <button type="submit" class="btn-guardar-manual">Guardar Pedido</button>
+            </form>
+        </div>
+    </div>
+
     <div id="modalEmpleado" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEmpleado">&times;</span><h2>🧑‍🍳 Registrar Empleado</h2><form id="formEmpleado"><div class="grupo-form"><label>Nombre del Empleado:</label><input type="text" id="empNombre" required></div><div class="grupo-form"><label>Cargo / Rol:</label><input type="text" id="empCargo" required></div><div class="grupo-form"><label>Esquema de Pago:</label><select id="empTipoPago" required><option value="Por Olla Cocinada">Destajo (Pago por Olla)</option><option value="Salario Fijo Mensual">Salario Fijo Mensual</option><option value="Pago Diario">Pago Diario</option></select></div><div class="grupo-form"><label>Tarifa a pagar ($):</label><input type="number" id="empTarifa" required min="0"></div><button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Guardar Empleado</button></form></div></div>
     <div id="modalCliente" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCliente">&times;</span><h2>👥 Registrar Cliente</h2><form id="formCliente"><div class="grupo-form"><label>Nombre Negocio:</label><input type="text" id="clienteNegocio" required></div><div class="grupo-form"><label>Tipo:</label><select id="clienteTipo"><option value="Tienda">Tienda</option><option value="Vendedor">Distribuidor</option><option value="Mayorista">Mayorista</option></select></div><div class="grupo-form"><label>Teléfono:</label><input type="tel" id="clienteTelefono"></div><div class="grupo-form"><label>Precio Bolsa ($):</label><input type="number" id="clientePrecio" required min="1000"></div><button type="submit" class="btn-guardar-manual">Guardar</button></form></div></div>
 
@@ -298,8 +312,8 @@
         const auth = getAuth(app); 
         
         let inventarioActual = {}; 
-        let costosActuales = {}; // NUEVO: Estado global para guardar los costos
-        let capitalTotalBodega = 0; // NUEVO: Sumatoria del dinero inmovilizado
+        let costosActuales = {}; 
+        let capitalTotalBodega = 0; 
         
         let listaIngresosGlobal = []; 
         let listaGastosGlobal = [];   
@@ -313,7 +327,6 @@
             let wb = window.XLSX.utils.book_new(); let wsIngresos = window.XLSX.utils.json_to_sheet(listaIngresosGlobal); let wsGastos = window.XLSX.utils.json_to_sheet(listaGastosGlobal);
             let totalIn = listaIngresosGlobal.reduce((sum, item) => sum + item.Ingreso, 0); let totalOut = listaGastosGlobal.reduce((sum, item) => sum + item.Monto, 0);
             
-            // Excel ahora incluye el Capital en Bodega
             let wsResumen = window.XLSX.utils.json_to_sheet([
                 { "Concepto": "Total Ingresos Brutos", "Valor ($)": totalIn }, 
                 { "Concepto": "Total Gastos Operativos", "Valor ($)": totalOut }, 
@@ -326,7 +339,7 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) { document.getElementById('pantalla-login').style.display = 'none'; document.getElementById('pantalla-dashboard').style.display = 'block'; document.getElementById('correo-usuario').innerText = user.email; 
-                iniciarEscuchasBodega(); // Se reemplazó la función simple por una doble
+                iniciarEscuchasBodega(); 
                 cargarGastos(); cargarEmpleados(); cargarClientesYPedidos(); 
             } else { document.getElementById('pantalla-login').style.display = 'flex'; document.getElementById('pantalla-dashboard').style.display = 'none'; }
         });
@@ -334,19 +347,16 @@
         document.getElementById('btnIngresar').addEventListener('click', () => { signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(() => { document.getElementById('mensaje-error').style.display = 'block'; }); });
         document.getElementById('btnSalir').addEventListener('click', () => { signOut(auth); });
 
-
-        // --- 1. INVENTARIO CON COSTOS (NUEVO MOTOR) ---
+        // --- 1. INVENTARIO ---
         const refInventario = doc(db, "bodega", "insumos_principales");
-        const refCostos = doc(db, "bodega", "costos_insumos"); // Nueva base de datos para costos
+        const refCostos = doc(db, "bodega", "costos_insumos"); 
 
         function iniciarEscuchasBodega() {
-            // Escucha las cantidades físicas
             onSnapshot(refInventario, async (snapInv) => {
                 if (snapInv.exists()) { inventarioActual = snapInv.data(); } 
                 else { await setDoc(refInventario, { "Maiz_Amarillo_Kg": 500, "Bolsas_Zenner_Und": 3000, "Soda_Caustica_Kg": 10 }); }
                 renderizarBodega();
             });
-            // Escucha los precios de compra
             onSnapshot(refCostos, async (snapCost) => {
                 if (snapCost.exists()) { costosActuales = snapCost.data(); } 
                 else { await setDoc(refCostos, { "Maiz_Amarillo_Kg": 2500, "Bolsas_Zenner_Und": 50, "Soda_Caustica_Kg": 8000 }); }
@@ -374,20 +384,13 @@
             document.getElementById('capitalBodega').innerText = `Capital en Bodega: $${capitalTotalBodega.toLocaleString('es-CO')}`;
         }
 
-        // Crear Insumo + Costo
         const modalNuevoInsumo = document.getElementById('modalNuevoInsumo'); document.getElementById('btnAbrirModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'flex'); document.getElementById('btnCerrarModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'none');
         document.getElementById('formNuevoInsumo').addEventListener('submit', async (e) => { 
-            e.preventDefault(); 
-            const n = document.getElementById('insumoNombre').value.replace(/ /g, "_");
-            const cant = parseFloat(document.getElementById('insumoCant').value);
-            const costo = parseFloat(document.getElementById('insumoCosto').value);
-            // Guarda en ambas bases de datos
-            await updateDoc(refInventario, { [n]: cant });
-            await updateDoc(refCostos, { [n]: costo });
+            e.preventDefault(); const n = document.getElementById('insumoNombre').value.replace(/ /g, "_"); const cant = parseFloat(document.getElementById('insumoCant').value); const costo = parseFloat(document.getElementById('insumoCosto').value);
+            await updateDoc(refInventario, { [n]: cant }); await updateDoc(refCostos, { [n]: costo });
             modalNuevoInsumo.style.display = 'none'; document.getElementById('formNuevoInsumo').reset(); 
         });
 
-        // Ajustar Cantidad y Costo (y Borrar)
         const modalAjuste = document.getElementById('modalAjuste');
         document.getElementById('btnAbrirModalAjuste').addEventListener('click', () => {
             const inputsContainer = document.getElementById('inputsAjusteDinamico'); inputsContainer.innerHTML = '';
@@ -408,33 +411,20 @@
         document.getElementById('btnCerrarModalAjuste').addEventListener('click', () => modalAjuste.style.display = 'none');
         
         document.getElementById('formAjuste').addEventListener('submit', async (e) => { 
-            e.preventDefault(); 
-            let nuevasCantidades = {}; let nuevosCostos = {};
-            for (const n of Object.keys(inventarioActual)) { 
-                nuevasCantidades[n] = parseFloat(document.getElementById(`ajustecant_${n}`).value); 
-                nuevosCostos[n] = parseFloat(document.getElementById(`ajustecosto_${n}`).value);
-            } 
-            await updateDoc(refInventario, nuevasCantidades); 
-            await updateDoc(refCostos, nuevosCostos);
+            e.preventDefault(); let nuevasCantidades = {}; let nuevosCostos = {};
+            for (const n of Object.keys(inventarioActual)) { nuevasCantidades[n] = parseFloat(document.getElementById(`ajustecant_${n}`).value); nuevosCostos[n] = parseFloat(document.getElementById(`ajustecosto_${n}`).value); } 
+            await updateDoc(refInventario, nuevasCantidades); await updateDoc(refCostos, nuevosCostos);
             modalAjuste.style.display = 'none'; 
         });
         
-        window.eliminarInsumo = async function(nombre) {
-            if(confirm(`¿Estás seguro de ELIMINAR el insumo "${nombre}" por completo?`)) {
-                await updateDoc(refInventario, { [nombre]: deleteField() });
-                await updateDoc(refCostos, { [nombre]: deleteField() });
-                modalAjuste.style.display = 'none'; document.getElementById('btnAbrirModalAjuste').click();
-            }
-        }
+        window.eliminarInsumo = async function(nombre) { if(confirm(`¿Estás seguro de ELIMINAR el insumo "${nombre}" por completo?`)) { await updateDoc(refInventario, { [nombre]: deleteField() }); await updateDoc(refCostos, { [nombre]: deleteField() }); modalAjuste.style.display = 'none'; document.getElementById('btnAbrirModalAjuste').click(); } }
 
-        // Cocinar
         const modalCocina = document.getElementById('modalCocina'); document.getElementById('btnAbrirModalCocina').addEventListener('click', () => { document.getElementById('ollasCocinadas').value = parseInt(document.getElementById('planOllas').innerText) || 1; modalCocina.style.display = 'flex'; }); document.getElementById('btnCerrarModalCocina').addEventListener('click', () => modalCocina.style.display = 'none');
         document.getElementById('formCocina').addEventListener('submit', async (e) => { e.preventDefault(); const ollas = parseInt(document.getElementById('ollasCocinadas').value); if(confirm(`Se descontarán insumos para ${ollas} olla(s). ¿Continuar?`)) { let desc = {}; if(inventarioActual["Maiz_Amarillo_Kg"] !== undefined) desc["Maiz_Amarillo_Kg"] = increment(-(ollas * 25)); if(inventarioActual["Bolsas_Zenner_Und"] !== undefined) desc["Bolsas_Zenner_Und"] = increment(-(ollas * 160)); if(inventarioActual["Soda_Caustica_Kg"] !== undefined) desc["Soda_Caustica_Kg"] = increment(-(ollas * 0.5)); await updateDoc(refInventario, desc); modalCocina.style.display = 'none'; document.getElementById('formCocina').reset(); } });
 
-        // --- 2. GASTOS (CRUD TOTAL) ---
+        // --- 2. GASTOS ---
         const modalGasto = document.getElementById('modalGasto'); document.getElementById('btnAbrirModalGasto').addEventListener('click', () => modalGasto.style.display = 'flex'); document.getElementById('btnCerrarModalGasto').addEventListener('click', () => modalGasto.style.display = 'none');
         document.getElementById('formGasto').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "gastos"), { concepto: document.getElementById('gastoConcepto').value, monto: parseInt(document.getElementById('gastoValor').value), fecha: new Date().toISOString() }); modalGasto.style.display = 'none'; document.getElementById('formGasto').reset(); });
-        
         const modalEditarGasto = document.getElementById('modalEditarGasto'); document.getElementById('btnCerrarModalEditarGas').addEventListener('click', () => modalEditarGasto.style.display = 'none');
         window.abrirEditarGasto = function(id, concepto, monto) { document.getElementById('editGasId').value = id; document.getElementById('editGasConcepto').value = concepto; document.getElementById('editGasValor').value = monto; modalEditarGasto.style.display = 'flex'; }
         document.getElementById('formEditarGasto').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "gastos", document.getElementById('editGasId').value), { concepto: document.getElementById('editGasConcepto').value, monto: parseInt(document.getElementById('editGasValor').value) }); modalEditarGasto.style.display = 'none'; });
@@ -442,10 +432,9 @@
 
         function cargarGastos() { onSnapshot(query(collection(db, "gastos"), orderBy("fecha", "desc")), (snapshot) => { const cuerpoG = document.getElementById('cuerpoTablaGastos'); cuerpoG.innerHTML = ''; let total = 0; listaGastosGlobal = []; snapshot.forEach((docG) => { const g = docG.data(); total += g.monto; const fechaF = new Date(g.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short' }); listaGastosGlobal.push({ Fecha: fechaF, Concepto: g.concepto, Monto: g.monto }); cuerpoG.innerHTML += `<tr><td>${fechaF}</td><td><strong>${g.concepto}</strong></td><td style="color: #dc3545; font-weight:bold;">-$${g.monto.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarGasto('${docG.id}', '${g.concepto.replace(/'/g, "\\'")}', ${g.monto})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarGasto('${docG.id}')">🗑️</button></div></td></tr>`; }); document.getElementById('totalEgresos').innerText = "-$" + total.toLocaleString('es-CO'); if(total === 0) cuerpoG.innerHTML = '<tr><td colspan="4" style="text-align: center;">Sin gastos registrados.</td></tr>'; }); }
 
-        // --- 3. RECURSOS HUMANOS (CRUD TOTAL) ---
+        // --- 3. RECURSOS HUMANOS ---
         const modalEmpleado = document.getElementById('modalEmpleado'); document.getElementById('btnAbrirModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'flex'); document.getElementById('btnCerrarModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'none');
         document.getElementById('formEmpleado').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "empleados"), { nombre: document.getElementById('empNombre').value, cargo: document.getElementById('empCargo').value, tipo_pago: document.getElementById('empTipoPago').value, tarifa: parseInt(document.getElementById('empTarifa').value) }); modalEmpleado.style.display = 'none'; document.getElementById('formEmpleado').reset(); });
-        
         const modalEditarEmp = document.getElementById('modalEditarEmpleado'); document.getElementById('btnCerrarModalEditarEmp').addEventListener('click', () => modalEditarEmp.style.display = 'none');
         window.abrirEditarEmpleado = function(id, nombre, cargo, tipo, tarifa) { document.getElementById('editEmpId').value = id; document.getElementById('editEmpNombre').value = nombre; document.getElementById('editEmpCargo').value = cargo; document.getElementById('editEmpTipoPago').value = tipo; document.getElementById('editEmpTarifa').value = tarifa; modalEditarEmp.style.display = 'flex'; }
         document.getElementById('formEditarEmpleado').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "empleados", document.getElementById('editEmpId').value), { nombre: document.getElementById('editEmpNombre').value, cargo: document.getElementById('editEmpCargo').value, tipo_pago: document.getElementById('editEmpTipoPago').value, tarifa: parseInt(document.getElementById('editEmpTarifa').value) }); modalEditarEmp.style.display = 'none'; });
@@ -453,10 +442,9 @@
 
         function cargarEmpleados() { onSnapshot(collection(db, "empleados"), (snapshot) => { const cuerpoE = document.getElementById('cuerpoTablaEmpleados'); cuerpoE.innerHTML = ''; if(snapshot.empty) cuerpoE.innerHTML = '<tr><td colspan="5" style="text-align: center;">Sin personal.</td></tr>'; snapshot.forEach((docEmp) => { const e = docEmp.data(); cuerpoE.innerHTML += `<tr><td><strong>${e.nombre}</strong></td><td>${e.cargo}</td><td>${e.tipo_pago}</td><td>$${e.tarifa.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarEmpleado('${docEmp.id}', '${e.nombre.replace(/'/g, "\\'")}', '${e.cargo.replace(/'/g, "\\'")}', '${e.tipo_pago}', ${e.tarifa})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarEmpleado('${docEmp.id}')">🗑️</button></div></td></tr>`; }); }); }
 
-        // --- 4. CLIENTES (CRUD TOTAL) ---
+        // --- 4. CLIENTES ---
         const modalCliente = document.getElementById('modalCliente'); document.getElementById('btnAbrirModalCliente').addEventListener('click', () => modalCliente.style.display = 'flex'); document.getElementById('btnCerrarModalCliente').addEventListener('click', () => modalCliente.style.display = 'none');
         document.getElementById('formCliente').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "clientes"), { nombre: document.getElementById('clienteNegocio').value.trim(), tipo: document.getElementById('clienteTipo').value, telefono: document.getElementById('clienteTelefono').value, precio_asignado: parseInt(document.getElementById('clientePrecio').value) }); modalCliente.style.display = 'none'; document.getElementById('formCliente').reset(); });
-        
         const modalEditarCli = document.getElementById('modalEditarCliente'); document.getElementById('btnCerrarModalEditarCli').addEventListener('click', () => modalEditarCli.style.display = 'none');
         window.abrirEditarCliente = function(id, nombre, tipo, telefono, precio) { document.getElementById('editCliId').value = id; document.getElementById('editCliNegocio').value = nombre; document.getElementById('editCliTipo').value = tipo; document.getElementById('editCliTelefono').value = telefono; document.getElementById('editCliPrecio').value = precio; modalEditarCli.style.display = 'flex'; }
         document.getElementById('formEditarCliente').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "clientes", document.getElementById('editCliId').value), { nombre: document.getElementById('editCliNegocio').value.trim(), tipo: document.getElementById('editCliTipo').value, telefono: document.getElementById('editCliTelefono').value, precio_asignado: parseInt(document.getElementById('editCliPrecio').value) }); modalEditarCli.style.display = 'none'; });
@@ -467,7 +455,7 @@
                 directorioPrecios = {}; const cuerpoC = document.getElementById('cuerpoTablaClientes'); cuerpoC.innerHTML = '';
                 snapClientes.forEach((docCli) => { const c = docCli.data(); directorioPrecios[c.nombre.toLowerCase()] = c.precio_asignado; cuerpoC.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td><span class="estado" style="background-color:#e2e3e5; color:#383d41;">${c.tipo}</span></td><td>${c.telefono}</td><td style="color: #28a745; font-weight: bold;">$${c.precio_asignado.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarCliente('${docCli.id}', '${c.nombre.replace(/'/g, "\\'")}', '${c.tipo}', '${c.telefono || ''}', ${c.precio_asignado})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarCliente('${docCli.id}')">🗑️</button></div></td></tr>`; });
                 
-                // Pedidos
+                // Pedidos (CON DIRECCIÓN Y TELÉFONO VISIBLES)
                 onSnapshot(query(collection(db, "pedidos"), orderBy("fecha", "desc")), (snapshot) => {
                     const cuerpoP = document.getElementById('cuerpoTablaPedidos'); cuerpoP.innerHTML = ''; let sumBolsas = 0, sumIngresos = 0; listaIngresosGlobal = []; 
                     snapshot.forEach((docPed) => {
@@ -478,7 +466,25 @@
                         let estPrec = p.precio_personalizado ? "color: #17a2b8; font-weight: bold;" : (!directorioPrecios[(p.negocio || "").trim().toLowerCase()] ? "color: #fd7e14;" : "");
                         let alerPrec = p.precio_personalizado ? " 🌟" : (!directorioPrecios[(p.negocio || "").trim().toLowerCase()] ? " ⚠️" : "");
 
-                        cuerpoP.innerHTML += `<tr><td><small>${fechaF}</small></td><td><strong>${p.negocio || 'N/A'}</strong></td><td style="${estPrec}">$${precioAp.toLocaleString('es-CO')}${alerPrec}</td><td><strong>${p.cantidad_bolsas}</strong></td><td style="color: #28a745; font-weight: bold;">$${totalP.toLocaleString('es-CO')}</td><td><span class="estado ${clase}">${p.estado}</span></td><td class="no-print"><div class="acciones-grid"><button class="btn-factura" onclick="imprimirFactura('${p.negocio.replace(/'/g, "\\'")}', '${fechaF}', ${p.cantidad_bolsas}, ${precioAp}, ${totalP})">📄</button><button class="btn-accion btn-editar" onclick="abrirEditarPedido('${docPed.id}', ${p.cantidad_bolsas}, ${precioAp})" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✏️</button><button class="btn-accion btn-entregar" onclick="cambiarEstado('${docPed.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button><button class="btn-accion btn-cancelar" onclick="cambiarEstado('${docPed.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button><button class="btn-accion btn-borrar" onclick="borrarPedido('${docPed.id}')">🗑️</button></div></td></tr>`;
+                        cuerpoP.innerHTML += `<tr>
+                            <td><small>${fechaF}</small></td>
+                            <td>
+                                <strong>${p.negocio || 'N/A'}</strong><br>
+                                <span style="font-size:11px; color:#666;">📍 ${p.direccion || 'Sin dirección'}</span><br>
+                                <span style="font-size:11px; color:#666;">📞 ${p.telefono || 'Sin teléfono'}</span>
+                            </td>
+                            <td style="${estPrec}">$${precioAp.toLocaleString('es-CO')}${alerPrec}</td>
+                            <td><strong>${p.cantidad_bolsas}</strong></td>
+                            <td style="color: #28a745; font-weight: bold;">$${totalP.toLocaleString('es-CO')}</td>
+                            <td><span class="estado ${clase}">${p.estado}</span></td>
+                            <td class="no-print"><div class="acciones-grid">
+                                <button class="btn-factura" onclick="imprimirFactura('${p.negocio.replace(/'/g, "\\'")}', '${fechaF}', ${p.cantidad_bolsas}, ${precioAp}, ${totalP})">📄</button>
+                                <button class="btn-accion btn-editar" onclick="abrirEditarPedido('${docPed.id}', ${p.cantidad_bolsas}, ${precioAp})" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✏️</button>
+                                <button class="btn-accion btn-entregar" onclick="cambiarEstado('${docPed.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
+                                <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${docPed.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
+                                <button class="btn-accion btn-borrar" onclick="borrarPedido('${docPed.id}')">🗑️</button>
+                            </div></td>
+                        </tr>`;
                     });
 
                     document.getElementById('totalBolsas').innerText = sumBolsas; document.getElementById('totalIngresos').innerText = "$" + sumIngresos.toLocaleString('es-CO');
@@ -487,11 +493,25 @@
             });
         }
 
-        // --- 5. PEDIDOS Y EXCEL ---
-        const modalNuevoPedido = document.getElementById('modalNuevoPedido'); document.getElementById('btnAbrirModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'flex'); document.getElementById('btnCerrarModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'none'); document.getElementById('formManual').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "pedidos"), { negocio: document.getElementById('manualNegocio').value.trim(), cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value), fecha: new Date().toISOString(), estado: "Pendiente" }); modalNuevoPedido.style.display = 'none'; document.getElementById('formManual').reset(); });
+        // --- 5. PEDIDOS MANUALES Y EXCEL ---
+        const modalNuevoPedido = document.getElementById('modalNuevoPedido'); document.getElementById('btnAbrirModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'flex'); document.getElementById('btnCerrarModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'none'); 
+        document.getElementById('formManual').addEventListener('submit', async (e) => { 
+            e.preventDefault(); 
+            await addDoc(collection(db, "pedidos"), { 
+                negocio: document.getElementById('manualNegocio').value.trim(), 
+                direccion: document.getElementById('manualDireccion').value.trim(),
+                telefono: document.getElementById('manualTelefono').value.trim(),
+                cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value), 
+                fecha: new Date().toISOString(), 
+                estado: "Pendiente", 
+                origen: "Manual" 
+            }); 
+            modalNuevoPedido.style.display = 'none'; 
+            document.getElementById('formManual').reset(); 
+        });
         
         const inputExcel = document.getElementById('inputExcel'); document.getElementById('btnImportarExcel').addEventListener('click', () => inputExcel.click());
-        inputExcel.addEventListener('change', (e) => { const archivo = e.target.files[0]; if (!archivo) return; const lector = new FileReader(); lector.onload = async (evento) => { const filasJson = window.XLSX.utils.sheet_to_json(window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).Sheets[window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).SheetNames[0]]); for (let fila of filasJson) { if (fila.Negocio && fila.Cantidad) { await addDoc(collection(db, "pedidos"), { negocio: fila.Negocio.trim(), cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value || fila.Cantidad), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Excel" }); } } inputExcel.value = ""; alert("✅ Importación exitosa."); }; lector.readAsArrayBuffer(archivo); });
+        inputExcel.addEventListener('change', (e) => { const archivo = e.target.files[0]; if (!archivo) return; const lector = new FileReader(); lector.onload = async (evento) => { const filasJson = window.XLSX.utils.sheet_to_json(window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).Sheets[window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).SheetNames[0]]); for (let fila of filasJson) { if (fila.Negocio && fila.Cantidad) { await addDoc(collection(db, "pedidos"), { negocio: fila.Negocio.trim(), direccion: fila.Direccion || "Sin dirección", telefono: fila.Telefono || "Sin teléfono", cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value || fila.Cantidad), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Excel" }); } } inputExcel.value = ""; alert("✅ Importación exitosa."); }; lector.readAsArrayBuffer(archivo); });
 
         window.cambiarEstado = async (id, estado) => { if(confirm(`¿Confirmar ${estado}?`)) await updateDoc(doc(db, "pedidos", id), { estado }); }
         window.borrarPedido = async (id) => { if(confirm("¿Eliminar pedido?")) await deleteDoc(doc(db, "pedidos", id)); }
