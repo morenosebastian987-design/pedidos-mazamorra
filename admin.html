@@ -27,9 +27,12 @@
         .tarjeta-inv { background: #fff; padding: 15px; border-radius: 8px; border-left: 5px solid #17a2b8; min-width: 150px; flex: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .tarjeta-inv h3 { margin: 0 0 5px 0; font-size: 12px; color: #666; text-transform: uppercase; }
         .tarjeta-inv .numero { font-size: 24px; font-weight: bold; color: #333; }
+        .tarjeta-inv .costo-info { font-size: 12px; color: #666; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eee; }
+        .tarjeta-inv .costo-total { font-size: 14px; color: #28a745; font-weight: bold; margin-top: 2px; }
         .alerta-roja { color: #dc3545 !important; }
         
-        .grupo-botones-header { display: flex; gap: 10px; flex-wrap: wrap; }
+        .grupo-botones-header { display: flex; gap: 10px; flex-wrap: wrap; align-items: center;}
+        .indicador-capital { background: #e9ecef; color: #495057; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 1px solid #ced4da; }
         .btn-produccion { background-color: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
         .btn-ajuste { background-color: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
         .btn-excel { background-color: #217346; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
@@ -78,7 +81,7 @@
         .btn-accion:disabled { background-color: #ccc; cursor: not-allowed; }
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
-        .modal-contenido { background-color: #fff; padding: 25px; border-radius: 10px; width: 100%; max-width: 400px; position: relative; max-height: 90vh; overflow-y: auto;}
+        .modal-contenido { background-color: #fff; padding: 25px; border-radius: 10px; width: 100%; max-width: 500px; position: relative; max-height: 90vh; overflow-y: auto;}
         .cerrar { position: absolute; top: 15px; right: 20px; font-size: 24px; font-weight: bold; color: #aaa; cursor: pointer; }
         .grupo-form { margin-bottom: 15px; }
         .grupo-form label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #555; }
@@ -121,10 +124,11 @@
 
         <div class="contenedor">
             <div class="seccion-titulo">
-                <strong>📦 Bodega de Insumos Flexibles</strong>
+                <strong>📦 Bodega Valorizada (Inventario Físico)</strong>
                 <div class="grupo-botones-header no-print">
+                    <span class="indicador-capital" id="capitalBodega">Capital en Bodega: $0</span>
                     <button class="btn-nuevo" id="btnAbrirModalNuevoInsumo" style="background-color: #6f42c1; color: white;">+ Nuevo Insumo</button>
-                    <button class="btn-ajuste" id="btnAbrirModalAjuste">✏️ Ajustar / Borrar</button>
+                    <button class="btn-ajuste" id="btnAbrirModalAjuste">✏️ Ajustar Cantidades / Costos</button>
                 </div>
             </div>
             <div class="resumen-inventario" id="contenedorInventario">
@@ -237,37 +241,45 @@
         <div class="fac-totales">TOTAL A PAGAR: <span id="facTotal"></span></div>
     </div>
 
-    <div id="modalNuevoInsumo" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalNuevoInsumo">&times;</span><h2>📦 Registrar Nuevo Insumo</h2><form id="formNuevoInsumo"><div class="grupo-form"><label>Nombre del insumo:</label><input type="text" id="insumoNombre" required></div><div class="grupo-form"><label>Cantidad Inicial en Bodega:</label><input type="number" id="insumoCant" required min="0" step="any"></div><button type="submit" class="btn-guardar-manual" style="background-color: #6f42c1;">Crear Insumo</button></form></div></div>
+    <div id="modalNuevoInsumo" class="modal no-print">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalNuevoInsumo">&times;</span>
+            <h2>📦 Registrar Nuevo Insumo</h2>
+            <form id="formNuevoInsumo">
+                <div class="grupo-form"><label>Nombre del insumo:</label><input type="text" id="insumoNombre" required></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="grupo-form" style="flex: 1;"><label>Cantidad Inicial:</label><input type="number" id="insumoCant" required min="0" step="any"></div>
+                    <div class="grupo-form" style="flex: 1;"><label>Costo Unitario ($):</label><input type="number" id="insumoCosto" required min="0" step="any"></div>
+                </div>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #6f42c1;">Crear Insumo</button>
+            </form>
+        </div>
+    </div>
     
     <div id="modalAjuste" class="modal no-print">
         <div class="modal-contenido">
             <span class="cerrar" id="btnCerrarModalAjuste">&times;</span>
-            <h2>✏️ Ajustar Bodega</h2>
+            <h2>✏️ Ajustar Bodega y Costos</h2>
             <form id="formAjuste">
                 <div id="inputsAjusteDinamico"></div>
-                <button type="submit" class="btn-guardar-manual" style="background-color: #6c757d;">Guardar Ajuste</button>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #6c757d;">Guardar Ajustes</button>
             </form>
         </div>
     </div>
 
     <div id="modalGasto" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalGasto">&times;</span><h2>💸 Registrar Gasto</h2><form id="formGasto"><div class="grupo-form"><label>Concepto:</label><input type="text" id="gastoConcepto" required></div><div class="grupo-form"><label>Valor Pagado ($):</label><input type="number" id="gastoValor" required min="100"></div><button type="submit" class="btn-guardar-manual" style="background-color: #dc3545;">Guardar Gasto</button></form></div></div>
-    <div id="modalCocina" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCocina">&times;</span><h2>🍲 Ejecutar Producción</h2><form id="formCocina"><div class="grupo-form"><label>Confirmar número de ollas cocinadas:</label><input type="number" id="ollasCocinadas" required min="1" value="1"></div><p style="font-size:12px; color:#666;">Se descontará la receta estándar.</p><button type="submit" class="btn-guardar-manual" style="background-color: #28a745;">Ejecutar y Descontar Inventario</button></form></div></div>
+    <div id="modalCocina" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCocina">&times;</span><h2>🍲 Ejecutar Producción</h2><form id="formCocina"><div class="grupo-form"><label>Confirmar número de ollas cocinadas:</label><input type="number" id="ollasCocinadas" required min="1" value="1"></div><p style="font-size:12px; color:#666;">Se descontará la receta estándar de tu inventario físico.</p><button type="submit" class="btn-guardar-manual" style="background-color: #28a745;">Ejecutar y Descontar Inventario</button></form></div></div>
     <div id="modalNuevoPedido" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalPedido">&times;</span><h2>📞 Pedido Manual</h2><form id="formManual"><div class="grupo-form"><label>Negocio:</label><input type="text" id="manualNegocio" required></div><div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div><button type="submit" class="btn-guardar-manual">Guardar Pedido</button></form></div></div>
     <div id="modalEmpleado" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEmpleado">&times;</span><h2>🧑‍🍳 Registrar Empleado</h2><form id="formEmpleado"><div class="grupo-form"><label>Nombre del Empleado:</label><input type="text" id="empNombre" required></div><div class="grupo-form"><label>Cargo / Rol:</label><input type="text" id="empCargo" required></div><div class="grupo-form"><label>Esquema de Pago:</label><select id="empTipoPago" required><option value="Por Olla Cocinada">Destajo (Pago por Olla)</option><option value="Salario Fijo Mensual">Salario Fijo Mensual</option><option value="Pago Diario">Pago Diario</option></select></div><div class="grupo-form"><label>Tarifa a pagar ($):</label><input type="number" id="empTarifa" required min="0"></div><button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Guardar Empleado</button></form></div></div>
     <div id="modalCliente" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCliente">&times;</span><h2>👥 Registrar Cliente</h2><form id="formCliente"><div class="grupo-form"><label>Nombre Negocio:</label><input type="text" id="clienteNegocio" required></div><div class="grupo-form"><label>Tipo:</label><select id="clienteTipo"><option value="Tienda">Tienda</option><option value="Vendedor">Distribuidor</option><option value="Mayorista">Mayorista</option></select></div><div class="grupo-form"><label>Teléfono:</label><input type="tel" id="clienteTelefono"></div><div class="grupo-form"><label>Precio Bolsa ($):</label><input type="number" id="clientePrecio" required min="1000"></div><button type="submit" class="btn-guardar-manual">Guardar</button></form></div></div>
 
     <div id="modalEditarPedido" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEditar">&times;</span><h2>✏️ Editar Pedido</h2><form id="formEditarPedido"><input type="hidden" id="editPedidoId"><div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="editCantidad" required min="1"></div><div class="grupo-form"><label>Precio Especial ($):</label><input type="number" id="editPrecio" required min="0"></div><div class="grupo-form" style="background: #f8fff9; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb; text-align: center; margin-bottom: 15px;"><label style="color: #155724; font-size: 14px; margin-bottom: 5px;">Total a Cobrar:</label><div id="editTotalDinamico" style="font-size: 28px; font-weight: bold; color: #28a745;">$0</div></div><button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Guardar Cambios</button></form></div></div>
-
     <div id="modalEditarEmpleado" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEditarEmp">&times;</span><h2>✏️ Editar Empleado</h2><form id="formEditarEmpleado"><input type="hidden" id="editEmpId"><div class="grupo-form"><label>Nombre:</label><input type="text" id="editEmpNombre" required></div><div class="grupo-form"><label>Cargo:</label><input type="text" id="editEmpCargo" required></div><div class="grupo-form"><label>Pago:</label><select id="editEmpTipoPago" required><option value="Por Olla Cocinada">Destajo</option><option value="Salario Fijo Mensual">Fijo Mensual</option><option value="Pago Diario">Diario</option></select></div><div class="grupo-form"><label>Tarifa ($):</label><input type="number" id="editEmpTarifa" required min="0"></div><button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Actualizar</button></form></div></div>
-
     <div id="modalEditarCliente" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEditarCli">&times;</span><h2>✏️ Editar Cliente</h2><form id="formEditarCliente"><input type="hidden" id="editCliId"><div class="grupo-form"><label>Negocio:</label><input type="text" id="editCliNegocio" required></div><div class="grupo-form"><label>Tipo:</label><select id="editCliTipo" required><option value="Tienda">Tienda</option><option value="Vendedor">Distribuidor</option><option value="Mayorista">Mayorista</option></select></div><div class="grupo-form"><label>Teléfono:</label><input type="tel" id="editCliTelefono"></div><div class="grupo-form"><label>Precio Bolsa ($):</label><input type="number" id="editCliPrecio" required min="1000"></div><button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Actualizar</button></form></div></div>
-
     <div id="modalEditarGasto" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEditarGas">&times;</span><h2>✏️ Editar Gasto</h2><form id="formEditarGasto"><input type="hidden" id="editGasId"><div class="grupo-form"><label>Concepto:</label><input type="text" id="editGasConcepto" required></div><div class="grupo-form"><label>Valor ($):</label><input type="number" id="editGasValor" required min="0"></div><button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Actualizar</button></form></div></div>
-
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        // ATENCIÓN: Se importó deleteField para poder borrar insumos de la bodega completamente.
         import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc, setDoc, increment, getDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
@@ -286,6 +298,9 @@
         const auth = getAuth(app); 
         
         let inventarioActual = {}; 
+        let costosActuales = {}; // NUEVO: Estado global para guardar los costos
+        let capitalTotalBodega = 0; // NUEVO: Sumatoria del dinero inmovilizado
+        
         let listaIngresosGlobal = []; 
         let listaGastosGlobal = [];   
         let directorioPrecios = {}; 
@@ -297,58 +312,118 @@
             if (listaIngresosGlobal.length === 0 && listaGastosGlobal.length === 0) { alert("No hay datos financieros."); return; }
             let wb = window.XLSX.utils.book_new(); let wsIngresos = window.XLSX.utils.json_to_sheet(listaIngresosGlobal); let wsGastos = window.XLSX.utils.json_to_sheet(listaGastosGlobal);
             let totalIn = listaIngresosGlobal.reduce((sum, item) => sum + item.Ingreso, 0); let totalOut = listaGastosGlobal.reduce((sum, item) => sum + item.Monto, 0);
-            let wsResumen = window.XLSX.utils.json_to_sheet([{ "Concepto": "Total Ingresos Brutos", "Valor ($)": totalIn }, { "Concepto": "Total Gastos Operativos", "Valor ($)": totalOut }, { "Concepto": "UTILIDAD NETA", "Valor ($)": (totalIn - totalOut) }]);
+            
+            // Excel ahora incluye el Capital en Bodega
+            let wsResumen = window.XLSX.utils.json_to_sheet([
+                { "Concepto": "Total Ingresos Brutos", "Valor ($)": totalIn }, 
+                { "Concepto": "Total Gastos Operativos", "Valor ($)": totalOut }, 
+                { "Concepto": "UTILIDAD NETA", "Valor ($)": (totalIn - totalOut) },
+                { "Concepto": "---", "Valor ($)": "---" },
+                { "Concepto": "Capital Inmovilizado (Bodega)", "Valor ($)": capitalTotalBodega }
+            ]);
             window.XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen"); window.XLSX.utils.book_append_sheet(wb, wsIngresos, "Ingresos"); window.XLSX.utils.book_append_sheet(wb, wsGastos, "Egresos"); window.XLSX.writeFile(wb, "Balance_Financiero.xlsx");
         }
 
         onAuthStateChanged(auth, (user) => {
-            if (user) { document.getElementById('pantalla-login').style.display = 'none'; document.getElementById('pantalla-dashboard').style.display = 'block'; document.getElementById('correo-usuario').innerText = user.email; cargarInventarioDinamico(); cargarGastos(); cargarEmpleados(); cargarClientesYPedidos(); 
+            if (user) { document.getElementById('pantalla-login').style.display = 'none'; document.getElementById('pantalla-dashboard').style.display = 'block'; document.getElementById('correo-usuario').innerText = user.email; 
+                iniciarEscuchasBodega(); // Se reemplazó la función simple por una doble
+                cargarGastos(); cargarEmpleados(); cargarClientesYPedidos(); 
             } else { document.getElementById('pantalla-login').style.display = 'flex'; document.getElementById('pantalla-dashboard').style.display = 'none'; }
         });
 
         document.getElementById('btnIngresar').addEventListener('click', () => { signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(() => { document.getElementById('mensaje-error').style.display = 'block'; }); });
         document.getElementById('btnSalir').addEventListener('click', () => { signOut(auth); });
 
-        // --- 1. INVENTARIO ---
+
+        // --- 1. INVENTARIO CON COSTOS (NUEVO MOTOR) ---
         const refInventario = doc(db, "bodega", "insumos_principales");
-        async function cargarInventarioDinamico() {
-            onSnapshot(refInventario, async (docSnap) => {
-                if (docSnap.exists()) {
-                    inventarioActual = docSnap.data(); const contenedor = document.getElementById('contenedorInventario'); contenedor.innerHTML = ''; 
-                    for (const [nombreInsumo, cantidad] of Object.entries(inventarioActual)) { contenedor.innerHTML += `<div class="tarjeta-inv"><h3>${nombreInsumo}</h3><div class="numero ${(cantidad < 10) ? 'alerta-roja' : ''}">${cantidad}</div></div>`; }
-                } else { await setDoc(refInventario, { "Maiz_Amarillo_Kg": 500, "Bolsas_Zenner_Und": 3000, "Soda_Caustica_Kg": 10 }); }
+        const refCostos = doc(db, "bodega", "costos_insumos"); // Nueva base de datos para costos
+
+        function iniciarEscuchasBodega() {
+            // Escucha las cantidades físicas
+            onSnapshot(refInventario, async (snapInv) => {
+                if (snapInv.exists()) { inventarioActual = snapInv.data(); } 
+                else { await setDoc(refInventario, { "Maiz_Amarillo_Kg": 500, "Bolsas_Zenner_Und": 3000, "Soda_Caustica_Kg": 10 }); }
+                renderizarBodega();
+            });
+            // Escucha los precios de compra
+            onSnapshot(refCostos, async (snapCost) => {
+                if (snapCost.exists()) { costosActuales = snapCost.data(); } 
+                else { await setDoc(refCostos, { "Maiz_Amarillo_Kg": 2500, "Bolsas_Zenner_Und": 50, "Soda_Caustica_Kg": 8000 }); }
+                renderizarBodega();
             });
         }
 
-        // Crear Insumo
-        const modalNuevoInsumo = document.getElementById('modalNuevoInsumo'); document.getElementById('btnAbrirModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'flex'); document.getElementById('btnCerrarModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'none');
-        document.getElementById('formNuevoInsumo').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(refInventario, { [document.getElementById('insumoNombre').value.replace(/ /g, "_")]: parseFloat(document.getElementById('insumoCant').value) }); modalNuevoInsumo.style.display = 'none'; document.getElementById('formNuevoInsumo').reset(); });
+        function renderizarBodega() {
+            const contenedor = document.getElementById('contenedorInventario');
+            contenedor.innerHTML = ''; capitalTotalBodega = 0;
 
-        // Ajustar Insumo (y Borrar)
+            for (const [nombre, cantidad] of Object.entries(inventarioActual)) {
+                let costoUnitario = costosActuales[nombre] || 0;
+                let costoTotalFila = cantidad * costoUnitario;
+                capitalTotalBodega += costoTotalFila;
+
+                contenedor.innerHTML += `
+                    <div class="tarjeta-inv">
+                        <h3>${nombre}</h3>
+                        <div class="numero ${(cantidad < 10) ? 'alerta-roja' : ''}">${cantidad}</div>
+                        <div class="costo-info">Costo x Unidad: $${costoUnitario.toLocaleString('es-CO')}</div>
+                        <div class="costo-total">Total: $${costoTotalFila.toLocaleString('es-CO')}</div>
+                    </div>`;
+            }
+            document.getElementById('capitalBodega').innerText = `Capital en Bodega: $${capitalTotalBodega.toLocaleString('es-CO')}`;
+        }
+
+        // Crear Insumo + Costo
+        const modalNuevoInsumo = document.getElementById('modalNuevoInsumo'); document.getElementById('btnAbrirModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'flex'); document.getElementById('btnCerrarModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'none');
+        document.getElementById('formNuevoInsumo').addEventListener('submit', async (e) => { 
+            e.preventDefault(); 
+            const n = document.getElementById('insumoNombre').value.replace(/ /g, "_");
+            const cant = parseFloat(document.getElementById('insumoCant').value);
+            const costo = parseFloat(document.getElementById('insumoCosto').value);
+            // Guarda en ambas bases de datos
+            await updateDoc(refInventario, { [n]: cant });
+            await updateDoc(refCostos, { [n]: costo });
+            modalNuevoInsumo.style.display = 'none'; document.getElementById('formNuevoInsumo').reset(); 
+        });
+
+        // Ajustar Cantidad y Costo (y Borrar)
         const modalAjuste = document.getElementById('modalAjuste');
         document.getElementById('btnAbrirModalAjuste').addEventListener('click', () => {
             const inputsContainer = document.getElementById('inputsAjusteDinamico'); inputsContainer.innerHTML = '';
             for (const [nombre, cantidad] of Object.entries(inventarioActual)) {
-                // Se agregó el botón de eliminar (basurero) junto al input
+                let costoActual = costosActuales[nombre] || 0;
                 inputsContainer.innerHTML += `
-                <div class="grupo-form" style="display:flex; align-items:center; gap:10px;">
-                    <div style="flex:1;"><label>${nombre}:</label><input type="number" id="ajuste_${nombre}" value="${cantidad}" required step="any" min="0"></div>
-                    <button type="button" class="btn-accion btn-borrar" style="margin-top:18px; padding:10px;" onclick="eliminarInsumo('${nombre}')" title="Eliminar Insumo Definitivamente">🗑️</button>
+                <div style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
+                    <label style="color:#f5b041;">${nombre}</label>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <div style="flex:1;"><label style="font-weight:normal;">Cantidad:</label><input type="number" id="ajustecant_${nombre}" value="${cantidad}" required step="any" min="0"></div>
+                        <div style="flex:1;"><label style="font-weight:normal;">Costo Unit. ($):</label><input type="number" id="ajustecosto_${nombre}" value="${costoActual}" required step="any" min="0"></div>
+                        <button type="button" class="btn-accion btn-borrar" style="margin-top:22px; padding:10px;" onclick="eliminarInsumo('${nombre}')" title="Borrar del Inventario">🗑️</button>
+                    </div>
                 </div>`;
             }
             modalAjuste.style.display = 'flex';
         });
         document.getElementById('btnCerrarModalAjuste').addEventListener('click', () => modalAjuste.style.display = 'none');
         
-        document.getElementById('formAjuste').addEventListener('submit', async (e) => { e.preventDefault(); let datos = {}; for (const n of Object.keys(inventarioActual)) { datos[n] = parseFloat(document.getElementById(`ajuste_${n}`).value); } await updateDoc(refInventario, datos); modalAjuste.style.display = 'none'; });
+        document.getElementById('formAjuste').addEventListener('submit', async (e) => { 
+            e.preventDefault(); 
+            let nuevasCantidades = {}; let nuevosCostos = {};
+            for (const n of Object.keys(inventarioActual)) { 
+                nuevasCantidades[n] = parseFloat(document.getElementById(`ajustecant_${n}`).value); 
+                nuevosCostos[n] = parseFloat(document.getElementById(`ajustecosto_${n}`).value);
+            } 
+            await updateDoc(refInventario, nuevasCantidades); 
+            await updateDoc(refCostos, nuevosCostos);
+            modalAjuste.style.display = 'none'; 
+        });
         
-        // NUEVA FUNCIÓN: Borrar Insumo usando deleteField
         window.eliminarInsumo = async function(nombre) {
-            if(confirm(`¿Estás seguro de ELIMINAR el insumo "${nombre}" de la base de datos?`)) {
+            if(confirm(`¿Estás seguro de ELIMINAR el insumo "${nombre}" por completo?`)) {
                 await updateDoc(refInventario, { [nombre]: deleteField() });
-                // Cierra y vuelve a abrir para refrescar la lista visualmente
-                modalAjuste.style.display = 'none';
-                document.getElementById('btnAbrirModalAjuste').click();
+                await updateDoc(refCostos, { [nombre]: deleteField() });
+                modalAjuste.style.display = 'none'; document.getElementById('btnAbrirModalAjuste').click();
             }
         }
 
