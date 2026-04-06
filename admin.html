@@ -126,6 +126,34 @@
             </div>
 
             <div class="seccion-titulo">
+                <strong>🧑‍🍳 Recursos Humanos y Nómina</strong>
+            </div>
+            <div class="panel-tabla">
+                <div class="panel-header">
+                    <h2>Personal Registrado</h2>
+                    <button class="btn-nuevo no-print" id="btnAbrirModalEmpleado" style="background-color: #17a2b8; color: white;">+ Nuevo Empleado</button>
+                </div>
+                <table id="tablaEmpleados">
+                    <thead><tr><th>Nombre</th><th>Cargo</th><th>Tipo de Pago</th><th>Tarifa Asignada ($)</th><th class="no-print">Acciones</th></tr></thead>
+                    <tbody id="cuerpoTablaEmpleados"></tbody>
+                </table>
+            </div>
+
+            <div class="seccion-titulo no-print">
+                <strong>👥 Directorio de Clientes y Vendedores</strong>
+            </div>
+            <div class="panel-tabla no-print">
+                <div class="panel-header">
+                    <h2>Lista de Precios Asignados</h2>
+                    <button class="btn-nuevo" id="btnAbrirModalCliente" style="background-color: #17a2b8; color: white;">+ Nuevo Cliente</button>
+                </div>
+                <table>
+                    <thead><tr><th>Nombre del Negocio</th><th>Tipo</th><th>Teléfono</th><th>Precio Asignado (x Bolsa)</th><th>Acciones</th></tr></thead>
+                    <tbody id="cuerpoTablaClientes"></tbody>
+                </table>
+            </div>
+
+            <div class="seccion-titulo">
                 <strong>📊 Balance Financiero y Gastos (P&G)</strong>
                 <div class="grupo-botones-header no-print">
                     <button class="btn-excel" onclick="exportarBalanceFinanciero()">📊 Exportar Balance (Excel)</button>
@@ -162,6 +190,8 @@
                 <div class="panel-header">
                     <h2>Gestión de Ventas</h2>
                     <div class="grupo-botones-header no-print">
+                        <input type="file" id="inputExcel" accept=".xlsx, .xls" style="display: none;">
+                        <button class="btn-importar" id="btnImportarExcel">📥 Importar Excel</button>
                         <button class="btn-nuevo" id="btnAbrirModalPedido">+ Pedido Manual</button>
                     </div>
                 </div>
@@ -181,7 +211,7 @@
                 </table>
             </div>
 
-            </div>
+        </div>
     </div>
 
     <div id="plantilla-factura">
@@ -227,19 +257,89 @@
         </div>
     </div>
 
-    <div id="modalCocina" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCocina">&times;</span><h2>🍲 Producción</h2><form id="formCocina"><div class="grupo-form"><label>Ollas cocinadas:</label><input type="number" id="ollasCocinadas" required min="1" value="1"></div><p style="font-size:12px; color:#666;">Nota: Cocinar descontará automáticamente la receta estándar (Maíz, Bolsas, Soda). Los demás insumos deben ajustarse manualmente.</p><button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Confirmar Descuento</button></form></div></div>
+    <div id="modalCocina" class="modal no-print">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalCocina">&times;</span>
+            <h2>🍲 Producción</h2>
+            <form id="formCocina">
+                <div class="grupo-form"><label>Ollas cocinadas:</label><input type="number" id="ollasCocinadas" required min="1" value="1"></div>
+                <p style="font-size:12px; color:#666;">Nota: Cocinar descontará automáticamente la receta estándar (Maíz, Bolsas, Soda).</p>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Confirmar Descuento</button>
+            </form>
+        </div>
+    </div>
     
-    <div id="modalNuevoPedido" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalPedido">&times;</span><h2>📞 Pedido Manual</h2><form id="formManual"><div class="grupo-form"><label>Negocio:</label><input type="text" id="manualNegocio" required></div><div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div><button type="submit" class="btn-guardar-manual">Guardar Pedido</button></form></div></div>
+    <div id="modalNuevoPedido" class="modal no-print">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalPedido">&times;</span>
+            <h2>📞 Pedido Manual</h2>
+            <form id="formManual">
+                <div class="grupo-form"><label>Negocio:</label><input type="text" id="manualNegocio" required></div>
+                <div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div>
+                <button type="submit" class="btn-guardar-manual">Guardar Pedido</button>
+            </form>
+        </div>
+    </div>
 
-    <div id="modalEditarPedido" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalEditar">&times;</span><h2>✏️ Editar Pedido</h2><form id="formEditarPedido"><input type="hidden" id="editPedidoId"><div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="editCantidad" required min="1"></div><div class="grupo-form"><label>Precio Especial ($):</label><input type="number" id="editPrecio" required min="0"></div><button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Guardar Cambios</button></form></div></div>
+    <div id="modalEmpleado" class="modal no-print">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalEmpleado">&times;</span>
+            <h2>🧑‍🍳 Registrar Empleado</h2>
+            <form id="formEmpleado">
+                <div class="grupo-form"><label>Nombre del Empleado:</label><input type="text" id="empNombre" required></div>
+                <div class="grupo-form"><label>Cargo / Rol:</label><input type="text" id="empCargo" required></div>
+                <div class="grupo-form"><label>Esquema de Pago:</label><select id="empTipoPago" required><option value="Por Olla Cocinada">Destajo (Pago por Olla)</option><option value="Salario Fijo Mensual">Salario Fijo Mensual</option><option value="Pago Diario">Pago Diario</option></select></div>
+                <div class="grupo-form"><label>Tarifa a pagar ($):</label><input type="number" id="empTarifa" required min="0"></div>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Guardar Empleado</button>
+            </form>
+        </div>
+    </div>
 
+    <div id="modalCliente" class="modal no-print">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalCliente">&times;</span>
+            <h2>👥 Registrar Cliente</h2>
+            <form id="formCliente">
+                <div class="grupo-form"><label>Nombre Negocio:</label><input type="text" id="clienteNegocio" required></div>
+                <div class="grupo-form"><label>Tipo:</label><select id="clienteTipo"><option value="Tienda">Tienda</option><option value="Vendedor">Distribuidor</option><option value="Mayorista">Mayorista</option></select></div>
+                <div class="grupo-form"><label>Teléfono:</label><input type="tel" id="clienteTelefono"></div>
+                <div class="grupo-form"><label>Precio Bolsa ($):</label><input type="number" id="clientePrecio" required min="1000"></div>
+                <button type="submit" class="btn-guardar-manual">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEditarPedido" class="modal no-print">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalEditar">&times;</span>
+            <h2>✏️ Editar Pedido</h2>
+            <form id="formEditarPedido">
+                <input type="hidden" id="editPedidoId">
+                <div class="grupo-form">
+                    <label>Cantidad (Bolsas):</label>
+                    <input type="number" id="editCantidad" required min="1">
+                </div>
+                <div class="grupo-form">
+                    <label>Precio Especial ($):</label>
+                    <input type="number" id="editPrecio" required min="0">
+                </div>
+                
+                <div class="grupo-form" style="background: #f8fff9; padding: 15px; border-radius: 8px; border: 1px solid #c3e6cb; text-align: center; margin-bottom: 15px;">
+                    <label style="color: #155724; font-size: 14px; margin-bottom: 5px;">Total a Cobrar:</label>
+                    <div id="editTotalDinamico" style="font-size: 28px; font-weight: bold; color: #28a745;">$0</div>
+                </div>
+
+                <button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc, setDoc, increment, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // ⚠️ TUS LLAVES AQUÍ ⚠️
+        // ⚠️ PEGA TUS LLAVES DE FIREBASE AQUÍ ⚠️
         const firebaseConfig = {
                 apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
                 authDomain: "pedidos-mazamorra.firebaseapp.com",
@@ -254,10 +354,11 @@
         const auth = getAuth(app); 
         
         let inventarioActual = {}; 
-        let listaIngresosGlobal = []; // Para el Excel
-        let listaGastosGlobal = [];   // Para el Excel
+        let listaIngresosGlobal = []; 
+        let listaGastosGlobal = [];   
         let directorioPrecios = {}; 
 
+        // --- FUNCIONES GLOBALES (IMPRIMIR Y EXCEL) ---
         window.imprimirFactura = function(negocio, fecha, cantidad, precio, total) {
             document.getElementById('facCliente').innerText = negocio;
             document.getElementById('facFecha').innerText = fecha;
@@ -268,13 +369,41 @@
             window.print();
         }
 
+        window.exportarBalanceFinanciero = function() {
+            if (listaIngresosGlobal.length === 0 && listaGastosGlobal.length === 0) {
+                alert("No hay datos financieros para exportar."); return;
+            }
+            let wb = window.XLSX.utils.book_new();
+            let wsIngresos = window.XLSX.utils.json_to_sheet(listaIngresosGlobal);
+            let wsGastos = window.XLSX.utils.json_to_sheet(listaGastosGlobal);
+            
+            let totalIn = listaIngresosGlobal.reduce((sum, item) => sum + item.Ingreso, 0);
+            let totalOut = listaGastosGlobal.reduce((sum, item) => sum + item.Monto, 0);
+            let utilidad = totalIn - totalOut;
+            
+            let resumenData = [
+                { "Concepto": "Total Ingresos Brutos", "Valor ($)": totalIn },
+                { "Concepto": "Total Gastos Operativos", "Valor ($)": totalOut },
+                { "Concepto": "UTILIDAD NETA", "Valor ($)": utilidad }
+            ];
+            let wsResumen = window.XLSX.utils.json_to_sheet(resumenData);
+
+            window.XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen P&G");
+            window.XLSX.utils.book_append_sheet(wb, wsIngresos, "Ingresos");
+            window.XLSX.utils.book_append_sheet(wb, wsGastos, "Egresos");
+            window.XLSX.writeFile(wb, "Balance_Financiero_Mazamorra.xlsx");
+        }
+
+        // --- AUTENTICACIÓN ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('pantalla-login').style.display = 'none';
                 document.getElementById('pantalla-dashboard').style.display = 'block';
+                document.getElementById('correo-usuario').innerText = user.email;
                 cargarInventarioDinamico(); 
                 cargarGastos();
-                cargarPedidosYPrecios(); 
+                cargarEmpleados();
+                cargarClientesYPedidos(); 
             } else {
                 document.getElementById('pantalla-login').style.display = 'flex';
                 document.getElementById('pantalla-dashboard').style.display = 'none';
@@ -284,9 +413,7 @@
         document.getElementById('btnIngresar').addEventListener('click', () => { signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(() => { document.getElementById('mensaje-error').style.display = 'block'; }); });
         document.getElementById('btnSalir').addEventListener('click', () => { signOut(auth); });
 
-        // ==========================================
-        // 1. LÓGICA DE INVENTARIO DINÁMICO
-        // ==========================================
+        // --- 1. INVENTARIO DINÁMICO ---
         const refInventario = doc(db, "bodega", "insumos_principales");
 
         async function cargarInventarioDinamico() {
@@ -294,9 +421,8 @@
                 if (docSnap.exists()) {
                     inventarioActual = docSnap.data();
                     const contenedor = document.getElementById('contenedorInventario');
-                    contenedor.innerHTML = ''; // Limpiamos el HTML
+                    contenedor.innerHTML = ''; 
                     
-                    // Recorremos cada insumo que exista en la base de datos
                     for (const [nombreInsumo, cantidad] of Object.entries(inventarioActual)) {
                         let claseAlerta = (cantidad < 10) ? 'alerta-roja' : '';
                         contenedor.innerHTML += `
@@ -307,44 +433,32 @@
                         `;
                     }
                 } else {
-                    // Inventario semilla si está vacío
                     await setDoc(refInventario, { "Maiz_Amarillo_Kg": 500, "Bolsas_Zenner_Und": 3000, "Soda_Caustica_Kg": 10 });
                 }
             });
         }
 
-        // Crear Nuevo Insumo
         const modalNuevoInsumo = document.getElementById('modalNuevoInsumo');
         document.getElementById('btnAbrirModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'flex');
         document.getElementById('btnCerrarModalNuevoInsumo').addEventListener('click', () => modalNuevoInsumo.style.display = 'none');
         document.getElementById('formNuevoInsumo').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const nombre = document.getElementById('insumoNombre').value.replace(/ /g, "_"); // Firebase prefiere sin espacios
+            const nombre = document.getElementById('insumoNombre').value.replace(/ /g, "_"); 
             const cant = parseFloat(document.getElementById('insumoCant').value);
-            
-            // Agrega la nueva propiedad al documento existente
             await updateDoc(refInventario, { [nombre]: cant });
             modalNuevoInsumo.style.display = 'none'; document.getElementById('formNuevoInsumo').reset();
         });
 
-        // Ajustar Inventario Dinámico
         const modalAjuste = document.getElementById('modalAjuste');
         document.getElementById('btnAbrirModalAjuste').addEventListener('click', () => {
             const inputsContainer = document.getElementById('inputsAjusteDinamico');
             inputsContainer.innerHTML = '';
-            // Creamos un input por cada insumo que exista
             for (const [nombre, cantidad] of Object.entries(inventarioActual)) {
-                inputsContainer.innerHTML += `
-                    <div class="grupo-form">
-                        <label>${nombre}:</label>
-                        <input type="number" id="ajuste_${nombre}" value="${cantidad}" required step="any" min="0">
-                    </div>
-                `;
+                inputsContainer.innerHTML += `<div class="grupo-form"><label>${nombre}:</label><input type="number" id="ajuste_${nombre}" value="${cantidad}" required step="any" min="0"></div>`;
             }
             modalAjuste.style.display = 'flex';
         });
         document.getElementById('btnCerrarModalAjuste').addEventListener('click', () => modalAjuste.style.display = 'none');
-        
         document.getElementById('formAjuste').addEventListener('submit', async (e) => {
             e.preventDefault();
             let datosActualizados = {};
@@ -355,38 +469,28 @@
             modalAjuste.style.display = 'none';
         });
 
-        // Cocinar (Receta Fija)
         const modalCocina = document.getElementById('modalCocina');
         document.getElementById('btnAbrirModalCocina').addEventListener('click', () => modalCocina.style.display = 'flex');
         document.getElementById('btnCerrarModalCocina').addEventListener('click', () => modalCocina.style.display = 'none');
         document.getElementById('formCocina').addEventListener('submit', async (e) => {
             e.preventDefault(); const ollas = parseInt(document.getElementById('ollasCocinadas').value);
-            // Validamos que existan las llaves originales antes de restar
             if(confirm(`Descontar receta para ${ollas} olla(s)?`)) {
                 let descuentos = {};
                 if(inventarioActual["Maiz_Amarillo_Kg"] !== undefined) descuentos["Maiz_Amarillo_Kg"] = increment(-(ollas * 25));
                 if(inventarioActual["Bolsas_Zenner_Und"] !== undefined) descuentos["Bolsas_Zenner_Und"] = increment(-(ollas * 160));
                 if(inventarioActual["Soda_Caustica_Kg"] !== undefined) descuentos["Soda_Caustica_Kg"] = increment(-(ollas * 0.5));
-                
                 await updateDoc(refInventario, descuentos);
                 modalCocina.style.display = 'none'; document.getElementById('formCocina').reset();
             }
         });
 
-        // ==========================================
-        // 2. LÓGICA DE GASTOS (EGRESOS)
-        // ==========================================
+        // --- 2. GASTOS ---
         const modalGasto = document.getElementById('modalGasto');
         document.getElementById('btnAbrirModalGasto').addEventListener('click', () => modalGasto.style.display = 'flex');
         document.getElementById('btnCerrarModalGasto').addEventListener('click', () => modalGasto.style.display = 'none');
-
         document.getElementById('formGasto').addEventListener('submit', async (e) => {
             e.preventDefault();
-            await addDoc(collection(db, "gastos"), {
-                concepto: document.getElementById('gastoConcepto').value,
-                monto: parseInt(document.getElementById('gastoValor').value),
-                fecha: new Date().toISOString()
-            });
+            await addDoc(collection(db, "gastos"), { concepto: document.getElementById('gastoConcepto').value, monto: parseInt(document.getElementById('gastoValor').value), fecha: new Date().toISOString() });
             modalGasto.style.display = 'none'; document.getElementById('formGasto').reset();
         });
 
@@ -394,45 +498,47 @@
             onSnapshot(query(collection(db, "gastos"), orderBy("fecha", "desc")), (snapshot) => {
                 const cuerpoG = document.getElementById('cuerpoTablaGastos');
                 cuerpoG.innerHTML = ''; let totalGastosDinero = 0;
-                listaGastosGlobal = []; // Limpiamos la lista para el Excel
+                listaGastosGlobal = []; 
 
                 snapshot.forEach((docG) => {
                     const g = docG.data();
                     totalGastosDinero += g.monto;
-                    
                     const fechaFormat = new Date(g.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short' });
-                    
-                    // Guardamos para el excel
                     listaGastosGlobal.push({ Fecha: fechaFormat, Concepto: g.concepto, Monto: g.monto });
-
-                    cuerpoG.innerHTML += `<tr>
-                        <td>${fechaFormat}</td>
-                        <td><strong>${g.concepto}</strong></td>
-                        <td style="color: #dc3545; font-weight:bold;">-$${g.monto.toLocaleString('es-CO')}</td>
-                        <td class="no-print"><button class="btn-accion btn-borrar" onclick="borrarGasto('${docG.id}')">🗑️</button></td>
-                    </tr>`;
+                    cuerpoG.innerHTML += `<tr><td>${fechaFormat}</td><td><strong>${g.concepto}</strong></td><td style="color: #dc3545; font-weight:bold;">-$${g.monto.toLocaleString('es-CO')}</td><td class="no-print"><button class="btn-accion btn-borrar" onclick="borrarGasto('${docG.id}')">🗑️</button></td></tr>`;
                 });
-
                 document.getElementById('totalEgresos').innerText = "-$" + totalGastosDinero.toLocaleString('es-CO');
                 if(totalGastosDinero === 0) cuerpoG.innerHTML = '<tr><td colspan="4" style="text-align: center;">Sin gastos registrados.</td></tr>';
             });
         }
         window.borrarGasto = async (id) => { if(confirm("¿Eliminar este gasto?")) await deleteDoc(doc(db, "gastos", id)); }
 
+        // --- 3. RECURSOS HUMANOS ---
+        const modalEmpleado = document.getElementById('modalEmpleado'); document.getElementById('btnAbrirModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'flex'); document.getElementById('btnCerrarModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'none');
+        document.getElementById('formEmpleado').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "empleados"), { nombre: document.getElementById('empNombre').value, cargo: document.getElementById('empCargo').value, tipo_pago: document.getElementById('empTipoPago').value, tarifa: parseInt(document.getElementById('empTarifa').value) }); modalEmpleado.style.display = 'none'; document.getElementById('formEmpleado').reset(); });
+        function cargarEmpleados() { onSnapshot(collection(db, "empleados"), (snapshot) => { const cuerpoE = document.getElementById('cuerpoTablaEmpleados'); cuerpoE.innerHTML = ''; if(snapshot.empty) cuerpoE.innerHTML = '<tr><td colspan="5" style="text-align: center;">Sin personal registrado.</td></tr>'; snapshot.forEach((docEmp) => { const e = docEmp.data(); cuerpoE.innerHTML += `<tr><td><strong>${e.nombre}</strong></td><td>${e.cargo}</td><td>${e.tipo_pago}</td><td>$${e.tarifa.toLocaleString('es-CO')}</td><td class="no-print"><button class="btn-accion btn-borrar" onclick="borrarEmpleado('${docEmp.id}')">🗑️</button></td></tr>`; }); }); }
+        window.borrarEmpleado = async (id) => { if(confirm("¿Eliminar empleado?")) await deleteDoc(doc(db, "empleados", id)); }
 
-        // ==========================================
-        // 3. LÓGICA DE PEDIDOS (INGRESOS)
-        // ==========================================
-        function cargarPedidosYPrecios() {
+        // --- 4. CLIENTES ---
+        const modalCliente = document.getElementById('modalCliente'); document.getElementById('btnAbrirModalCliente').addEventListener('click', () => modalCliente.style.display = 'flex'); document.getElementById('btnCerrarModalCliente').addEventListener('click', () => modalCliente.style.display = 'none');
+        document.getElementById('formCliente').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "clientes"), { nombre: document.getElementById('clienteNegocio').value.trim(), tipo: document.getElementById('clienteTipo').value, telefono: document.getElementById('clienteTelefono').value, precio_asignado: parseInt(document.getElementById('clientePrecio').value) }); modalCliente.style.display = 'none'; document.getElementById('formCliente').reset(); });
+        window.borrarCliente = async (id) => { if(confirm("¿Eliminar este cliente?")) await deleteDoc(doc(db, "clientes", id)); }
+        window.editarPrecioCliente = async (id, nombre, precioActual) => { const nuevoPrecio = prompt(`¿NUEVA tarifa por bolsa para ${nombre}?`, precioActual); if (nuevoPrecio !== null && nuevoPrecio.trim() !== "" && !isNaN(nuevoPrecio)) { await updateDoc(doc(db, "clientes", id), { precio_asignado: parseInt(nuevoPrecio) }); alert(`✅ Tarifa actualizada.`); } }
+
+        function cargarClientesYPedidos() {
             onSnapshot(collection(db, "clientes"), (snapClientes) => {
                 directorioPrecios = {};
-                snapClientes.forEach(c => directorioPrecios[c.data().nombre.toLowerCase()] = c.data().precio_asignado);
+                const cuerpoC = document.getElementById('cuerpoTablaClientes'); cuerpoC.innerHTML = '';
+                snapClientes.forEach((docCli) => {
+                    const c = docCli.data(); directorioPrecios[c.nombre.toLowerCase()] = c.precio_asignado;
+                    cuerpoC.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td><span class="estado" style="background-color:#e2e3e5; color:#383d41;">${c.tipo}</span></td><td>${c.telefono}</td><td style="color: #28a745; font-weight: bold;">$${c.precio_asignado.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="editarPrecioCliente('${docCli.id}', '${c.nombre}', ${c.precio_asignado})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarCliente('${docCli.id}')">🗑️</button></div></td></tr>`;
+                });
                 
+                // Cargar Pedidos usando el directorio
                 onSnapshot(query(collection(db, "pedidos"), orderBy("fecha", "desc")), (snapshot) => {
                     const cuerpoP = document.getElementById('cuerpoTablaPedidos');
-                    cuerpoP.innerHTML = ''; 
-                    let conteoPedidos = 0, sumaBolsasPendientes = 0, ingresosTotales = 0;
-                    listaIngresosGlobal = []; // Limpiamos para el Excel
+                    cuerpoP.innerHTML = ''; let conteoPedidos = 0, sumaBolsasPendientes = 0, ingresosTotales = 0;
+                    listaIngresosGlobal = []; 
 
                     snapshot.forEach((docPed) => {
                         const p = docPed.data(); conteoPedidos++;
@@ -448,10 +554,14 @@
                         const fechaF = new Date(p.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
                         let clase = p.estado === 'Entregado' ? 'entregado' : p.estado === 'Cancelado' ? 'cancelado' : 'pendiente';
                         
+                        let estiloPrecio = ""; let alertaPrecio = "";
+                        if (p.precio_personalizado) { estiloPrecio = "color: #17a2b8; font-weight: bold;"; alertaPrecio = " 🌟"; } 
+                        else if (!directorioPrecios[(p.negocio || "").trim().toLowerCase()]) { estiloPrecio = "color: #fd7e14;"; alertaPrecio = " ⚠️"; }
+
                         cuerpoP.innerHTML += `<tr>
                             <td><small>${fechaF}</small></td>
                             <td><strong>${p.negocio || 'N/A'}</strong></td>
-                            <td>$${precioAplicado.toLocaleString('es-CO')}</td>
+                            <td style="${estiloPrecio}">$${precioAplicado.toLocaleString('es-CO')}${alertaPrecio}</td>
                             <td><strong>${p.cantidad_bolsas}</strong></td>
                             <td style="color: #28a745; font-weight: bold;">$${totalPedido.toLocaleString('es-CO')}</td>
                             <td><span class="estado ${clase}">${p.estado}</span></td>
@@ -460,6 +570,7 @@
                                 <button class="btn-accion btn-editar" onclick="abrirEditarPedido('${docPed.id}', ${p.cantidad_bolsas}, ${precioAplicado})" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✏️</button>
                                 <button class="btn-accion btn-entregar" onclick="cambiarEstado('${docPed.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
                                 <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${docPed.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
+                                <button class="btn-accion btn-borrar" onclick="borrarPedido('${docPed.id}')">🗑️</button>
                             </div></td>
                         </tr>`;
                     });
@@ -470,51 +581,48 @@
             });
         }
 
-        // --- EDICIÓN Y CREACIÓN DE PEDIDOS (Lógica Mantenida) ---
+        // --- 5. PEDIDOS MANUALES Y EXCEL ---
         const modalNuevoPedido = document.getElementById('modalNuevoPedido'); document.getElementById('btnAbrirModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'flex'); document.getElementById('btnCerrarModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'none'); document.getElementById('formManual').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "pedidos"), { negocio: document.getElementById('manualNegocio').value.trim(), cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value), fecha: new Date().toISOString(), estado: "Pendiente" }); modalNuevoPedido.style.display = 'none'; document.getElementById('formManual').reset(); });
         
-        const modalEditarPedido = document.getElementById('modalEditarPedido'); document.getElementById('btnCerrarModalEditar').addEventListener('click', () => modalEditarPedido.style.display = 'none');
-        window.abrirEditarPedido = function(id, cantidad, precio) { document.getElementById('editPedidoId').value = id; document.getElementById('editCantidad').value = cantidad; document.getElementById('editPrecio').value = precio; modalEditarPedido.style.display = 'flex'; }
-        document.getElementById('formEditarPedido').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "pedidos", document.getElementById('editPedidoId').value), { cantidad_bolsas: parseInt(document.getElementById('editCantidad').value), precio_personalizado: parseInt(document.getElementById('editPrecio').value) }); modalEditarPedido.style.display = 'none'; });
-        
+        const inputExcel = document.getElementById('inputExcel'); document.getElementById('btnImportarExcel').addEventListener('click', () => inputExcel.click());
+        inputExcel.addEventListener('change', (e) => { const archivo = e.target.files[0]; if (!archivo) return; const lector = new FileReader(); lector.onload = async (evento) => { const filasJson = window.XLSX.utils.sheet_to_json(window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).Sheets[window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).SheetNames[0]]); for (let fila of filasJson) { if (fila.Negocio && fila.Cantidad) { await addDoc(collection(db, "pedidos"), { negocio: fila.Negocio.trim(), cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value || fila.Cantidad), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Excel" }); } } inputExcel.value = ""; alert("✅ Importación exitosa."); }; lector.readAsArrayBuffer(archivo); });
+
         window.cambiarEstado = async (id, estado) => { if(confirm(`¿Confirmar ${estado}?`)) await updateDoc(doc(db, "pedidos", id), { estado }); }
+        window.borrarPedido = async (id) => { if(confirm("¿Eliminar?")) await deleteDoc(doc(db, "pedidos", id)); }
 
+        // --- 6. CALCULADORA EN TIEMPO REAL (EDITAR PEDIDO) ---
+        const modalEditarPedido = document.getElementById('modalEditarPedido'); 
+        document.getElementById('btnCerrarModalEditar').addEventListener('click', () => modalEditarPedido.style.display = 'none');
+        
+        const inputEditCant = document.getElementById('editCantidad');
+        const inputEditPrecio = document.getElementById('editPrecio');
+        const divTotalDinamico = document.getElementById('editTotalDinamico');
 
-        // ==========================================
-        // 4. EXPORTACIÓN FINANCIERA (EL MAGO DE EXCEL)
-        // ==========================================
-        window.exportarBalanceFinanciero = function() {
-            if (listaIngresosGlobal.length === 0 && listaGastosGlobal.length === 0) {
-                alert("No hay datos financieros para exportar."); return;
-            }
-
-            // 1. Crear el libro de trabajo de Excel
-            let wb = window.XLSX.utils.book_new();
-
-            // 2. Convertir los arrays de JSON a hojas de cálculo
-            let wsIngresos = window.XLSX.utils.json_to_sheet(listaIngresosGlobal);
-            let wsGastos = window.XLSX.utils.json_to_sheet(listaGastosGlobal);
-
-            // 3. Crear hoja de Resumen P&G
-            let totalIn = listaIngresosGlobal.reduce((sum, item) => sum + item.Ingreso, 0);
-            let totalOut = listaGastosGlobal.reduce((sum, item) => sum + item.Monto, 0);
-            let utilidad = totalIn - totalOut;
-            
-            let resumenData = [
-                { "Concepto": "Total Ingresos Brutos", "Valor ($)": totalIn },
-                { "Concepto": "Total Gastos Operativos", "Valor ($)": totalOut },
-                { "Concepto": "UTILIDAD NETA", "Valor ($)": utilidad }
-            ];
-            let wsResumen = window.XLSX.utils.json_to_sheet(resumenData);
-
-            // 4. Agregar las hojas al archivo
-            window.XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen P&G");
-            window.XLSX.utils.book_append_sheet(wb, wsIngresos, "Ingresos (Ventas)");
-            window.XLSX.utils.book_append_sheet(wb, wsGastos, "Egresos (Gastos)");
-
-            // 5. Descargar el archivo
-            window.XLSX.writeFile(wb, "Balance_Financiero_Mazamorra.xlsx");
+        function actualizarCalculadora() {
+            const cant = parseInt(inputEditCant.value) || 0;
+            const precio = parseInt(inputEditPrecio.value) || 0;
+            divTotalDinamico.innerText = "$" + (cant * precio).toLocaleString('es-CO');
         }
+
+        inputEditCant.addEventListener('input', actualizarCalculadora);
+        inputEditPrecio.addEventListener('input', actualizarCalculadora);
+
+        window.abrirEditarPedido = function(id, cantidad, precio) { 
+            document.getElementById('editPedidoId').value = id; 
+            inputEditCant.value = cantidad; 
+            inputEditPrecio.value = precio; 
+            actualizarCalculadora(); 
+            modalEditarPedido.style.display = 'flex'; 
+        }
+
+        document.getElementById('formEditarPedido').addEventListener('submit', async (e) => { 
+            e.preventDefault(); 
+            await updateDoc(doc(db, "pedidos", document.getElementById('editPedidoId').value), { 
+                cantidad_bolsas: parseInt(inputEditCant.value), 
+                precio_personalizado: parseInt(inputEditPrecio.value) 
+            }); 
+            modalEditarPedido.style.display = 'none'; 
+        });
 
     </script>
 </body>
