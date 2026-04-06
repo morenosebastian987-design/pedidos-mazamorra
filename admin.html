@@ -64,6 +64,7 @@
         .btn-entregar { background-color: #28a745; }
         .btn-cancelar { background-color: #fd7e14; }
         .btn-borrar { background-color: #dc3545; }
+        .btn-editar { background-color: #ffc107; color: #000; }
         .btn-accion:disabled { background-color: #ccc; cursor: not-allowed; }
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); align-items: center; justify-content: center; }
@@ -74,24 +75,12 @@
         .grupo-form input, .grupo-form select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         .btn-guardar-manual { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
 
-        /* -------------------------------------- */
-        /* MAGIA DE IMPRESIÓN (FACTURA ESPECÍFICA)*/
-        /* -------------------------------------- */
-        #plantilla-factura { display: none; } /* Oculto en pantalla normal */
-        
+        /* MAGIA DE IMPRESIÓN (FACTURA ESPECÍFICA) */
+        #plantilla-factura { display: none; } 
         @media print {
             .no-print, #pantalla-dashboard, #pantalla-login, .modal { display: none !important; }
             body { background-color: white; margin: 0; padding: 0; color: #000; }
-            
-            /* Formato de Factura (Impresora normal o ticketera POS) */
-            #plantilla-factura { 
-                display: block !important; 
-                width: 100%; 
-                max-width: 800px; 
-                margin: 0 auto; 
-                padding: 40px; 
-                font-family: 'Courier New', Courier, monospace; /* Letra tipo factura */
-            }
+            #plantilla-factura { display: block !important; width: 100%; max-width: 800px; margin: 0 auto; padding: 40px; font-family: 'Courier New', Courier, monospace; }
             .fac-header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 20px; margin-bottom: 30px; }
             .fac-header h1 { margin: 0 0 10px 0; font-size: 28px; }
             .fac-header p { margin: 5px 0; font-size: 14px; }
@@ -254,6 +243,26 @@
     <div id="modalCocina" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalCocina">&times;</span><h2>🍲 Producción</h2><form id="formCocina"><div class="grupo-form"><label>Ollas cocinadas:</label><input type="number" id="ollasCocinadas" required min="1" value="1"></div><button type="submit" class="btn-guardar-manual" style="background-color: #17a2b8;">Confirmar Descuento</button></form></div></div>
     <div id="modalNuevoPedido" class="modal no-print"><div class="modal-contenido"><span class="cerrar" id="btnCerrarModalPedido">&times;</span><h2>📞 Pedido Manual</h2><form id="formManual"><div class="grupo-form"><label>Negocio:</label><input type="text" id="manualNegocio" required></div><div class="grupo-form"><label>Dirección:</label><input type="text" id="manualDireccion" required></div><div class="grupo-form"><label>Cantidad (Bolsas):</label><input type="number" id="manualBolsas" required min="1"></div><button type="submit" class="btn-guardar-manual">Guardar Pedido</button></form></div></div>
 
+    <div id="modalEditarPedido" class="modal no-print">
+        <div class="modal-contenido">
+            <span class="cerrar" id="btnCerrarModalEditar">&times;</span>
+            <h2>✏️ Editar Pedido</h2>
+            <p style="font-size: 13px; color: #666;">Cambia la cantidad de bolsas o aplica una promoción especial solo para este pedido.</p>
+            <form id="formEditarPedido">
+                <input type="hidden" id="editPedidoId">
+                <div class="grupo-form">
+                    <label>Cantidad de Bolsas (1kg):</label>
+                    <input type="number" id="editCantidad" required min="1">
+                </div>
+                <div class="grupo-form">
+                    <label>Precio Especial por Bolsa ($):</label>
+                    <input type="number" id="editPrecio" required min="0">
+                </div>
+                <button type="submit" class="btn-guardar-manual" style="background-color: #ffc107; color: #000;">Guardar Cambios</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -282,9 +291,7 @@
             window.XLSX.writeFile(wb, nombreArchivo);
         }
 
-        // --- FUNCIÓN PARA GENERAR E IMPRIMIR LA FACTURA ---
         window.imprimirFactura = function(negocio, direccion, fecha, cantidad, precio, total) {
-            // Llenamos la plantilla HTML oculta con los datos del pedido
             document.getElementById('facCliente').innerText = negocio;
             document.getElementById('facDireccion').innerText = direccion || "N/A";
             document.getElementById('facFecha').innerText = fecha;
@@ -292,8 +299,6 @@
             document.getElementById('facUnit').innerText = "$" + precio.toLocaleString('es-CO');
             document.getElementById('facSub').innerText = "$" + total.toLocaleString('es-CO');
             document.getElementById('facTotal').innerText = "$" + total.toLocaleString('es-CO');
-            
-            // Le pedimos al navegador que abra la ventana de impresión
             window.print();
         }
 
@@ -312,58 +317,49 @@
         document.getElementById('btnIngresar').addEventListener('click', () => { signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value).catch(() => { document.getElementById('mensaje-error').style.display = 'block'; }); });
         document.getElementById('btnSalir').addEventListener('click', () => { signOut(auth); });
 
-        // --- NÓMINA Y EMPLEADOS ---
-        const modalEmpleado = document.getElementById('modalEmpleado');
-        document.getElementById('btnAbrirModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'flex');
-        document.getElementById('btnCerrarModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'none');
-        document.getElementById('formEmpleado').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await addDoc(collection(db, "empleados"), { nombre: document.getElementById('empNombre').value, cargo: document.getElementById('empCargo').value, tipo_pago: document.getElementById('empTipoPago').value, tarifa: parseInt(document.getElementById('empTarifa').value) });
-            modalEmpleado.style.display = 'none'; document.getElementById('formEmpleado').reset();
-        });
-        function cargarEmpleados() {
-            onSnapshot(collection(db, "empleados"), (snapshot) => {
-                const cuerpoE = document.getElementById('cuerpoTablaEmpleados'); cuerpoE.innerHTML = '';
-                if(snapshot.empty) cuerpoE.innerHTML = '<tr><td colspan="5" style="text-align: center;">Sin personal registrado.</td></tr>';
-                snapshot.forEach((docEmp) => {
-                    const e = docEmp.data();
-                    cuerpoE.innerHTML += `<tr><td><strong>${e.nombre}</strong></td><td>${e.cargo}</td><td>${e.tipo_pago}</td><td>$${e.tarifa.toLocaleString('es-CO')}</td><td class="no-print"><button class="btn-accion btn-borrar" onclick="borrarEmpleado('${docEmp.id}')">🗑️</button></td></tr>`;
-                });
-            });
-        }
-        window.borrarEmpleado = async (id) => { if(confirm("¿Eliminar empleado?")) await deleteDoc(doc(db, "empleados", id)); }
-
-        // --- CLIENTES ---
-        const modalCliente = document.getElementById('modalCliente');
-        document.getElementById('btnAbrirModalCliente').addEventListener('click', () => modalCliente.style.display = 'flex');
-        document.getElementById('btnCerrarModalCliente').addEventListener('click', () => modalCliente.style.display = 'none');
-        document.getElementById('formCliente').addEventListener('submit', async (e) => {
-            e.preventDefault(); await addDoc(collection(db, "clientes"), { nombre: document.getElementById('clienteNegocio').value.trim(), tipo: document.getElementById('clienteTipo').value, telefono: document.getElementById('clienteTelefono').value, precio_asignado: parseInt(document.getElementById('clientePrecio').value) });
-            modalCliente.style.display = 'none'; document.getElementById('formCliente').reset();
-        });
-        window.borrarCliente = async (id) => { if(confirm("¿Eliminar este cliente?")) await deleteDoc(doc(db, "clientes", id)); }
+        // --- NÓMINA, EMPLEADOS Y CLIENTES (Sin Cambios) ---
+        const modalEmpleado = document.getElementById('modalEmpleado'); document.getElementById('btnAbrirModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'flex'); document.getElementById('btnCerrarModalEmpleado').addEventListener('click', () => modalEmpleado.style.display = 'none'); document.getElementById('formEmpleado').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "empleados"), { nombre: document.getElementById('empNombre').value, cargo: document.getElementById('empCargo').value, tipo_pago: document.getElementById('empTipoPago').value, tarifa: parseInt(document.getElementById('empTarifa').value) }); modalEmpleado.style.display = 'none'; document.getElementById('formEmpleado').reset(); }); function cargarEmpleados() { onSnapshot(collection(db, "empleados"), (snapshot) => { const cuerpoE = document.getElementById('cuerpoTablaEmpleados'); cuerpoE.innerHTML = ''; if(snapshot.empty) cuerpoE.innerHTML = '<tr><td colspan="5" style="text-align: center;">Sin personal registrado.</td></tr>'; snapshot.forEach((docEmp) => { const e = docEmp.data(); cuerpoE.innerHTML += `<tr><td><strong>${e.nombre}</strong></td><td>${e.cargo}</td><td>${e.tipo_pago}</td><td>$${e.tarifa.toLocaleString('es-CO')}</td><td class="no-print"><button class="btn-accion btn-borrar" onclick="borrarEmpleado('${docEmp.id}')">🗑️</button></td></tr>`; }); }); } window.borrarEmpleado = async (id) => { if(confirm("¿Eliminar empleado?")) await deleteDoc(doc(db, "empleados", id)); }
+        
+        const modalCliente = document.getElementById('modalCliente'); document.getElementById('btnAbrirModalCliente').addEventListener('click', () => modalCliente.style.display = 'flex'); document.getElementById('btnCerrarModalCliente').addEventListener('click', () => modalCliente.style.display = 'none'); document.getElementById('formCliente').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "clientes"), { nombre: document.getElementById('clienteNegocio').value.trim(), tipo: document.getElementById('clienteTipo').value, telefono: document.getElementById('clienteTelefono').value, precio_asignado: parseInt(document.getElementById('clientePrecio').value) }); modalCliente.style.display = 'none'; document.getElementById('formCliente').reset(); }); window.borrarCliente = async (id) => { if(confirm("¿Eliminar este cliente?")) await deleteDoc(doc(db, "clientes", id)); }
+        
+        window.editarPrecioCliente = async (id, nombre, precioActual) => { const nuevoPrecio = prompt(`¿NUEVA tarifa por bolsa para ${nombre}?`, precioActual); if (nuevoPrecio !== null && nuevoPrecio.trim() !== "" && !isNaN(nuevoPrecio)) { await updateDoc(doc(db, "clientes", id), { precio_asignado: parseInt(nuevoPrecio) }); alert(`✅ Tarifa actualizada a $${nuevoPrecio}.`); } }
 
         function cargarClientesYPedidos() {
             onSnapshot(collection(db, "clientes"), (snapshotClientes) => {
                 const cuerpoC = document.getElementById('cuerpoTablaClientes'); cuerpoC.innerHTML = ''; directorioPrecios = {}; 
                 snapshotClientes.forEach((docCli) => {
                     const c = docCli.data(); directorioPrecios[c.nombre.toLowerCase()] = c.precio_asignado;
-                    cuerpoC.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td><span class="estado" style="background-color:#e2e3e5; color:#383d41;">${c.tipo}</span></td><td>${c.telefono}</td><td style="color: #28a745; font-weight: bold;">$${c.precio_asignado.toLocaleString('es-CO')}</td><td><button class="btn-accion btn-borrar" onclick="borrarCliente('${docCli.id}')">🗑️ Eliminar</button></td></tr>`;
+                    cuerpoC.innerHTML += `<tr><td><strong>${c.nombre}</strong></td><td><span class="estado" style="background-color:#e2e3e5; color:#383d41;">${c.tipo}</span></td><td>${c.telefono}</td><td style="color: #28a745; font-weight: bold;">$${c.precio_asignado.toLocaleString('es-CO')}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="editarPrecioCliente('${docCli.id}', '${c.nombre}', ${c.precio_asignado})" title="Modificar Tarifa">✏️</button><button class="btn-accion btn-borrar" onclick="borrarCliente('${docCli.id}')" title="Eliminar Cliente">🗑️</button></div></td></tr>`;
                 });
                 cargarPedidos();
             });
         }
 
-        // --- PEDIDOS, EXCEL Y FACTURAS ---
-        const inputExcel = document.getElementById('inputExcel'); document.getElementById('btnImportarExcel').addEventListener('click', () => inputExcel.click());
-        inputExcel.addEventListener('change', (e) => {
-            const archivo = e.target.files[0]; if (!archivo) return;
-            const lector = new FileReader();
-            lector.onload = async (evento) => {
-                const filasJson = window.XLSX.utils.sheet_to_json(window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).Sheets[window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).SheetNames[0]]);
-                for (let fila of filasJson) { if (fila.Negocio && fila.Cantidad) { await addDoc(collection(db, "pedidos"), { negocio: fila.Negocio.trim(), correo: "Importado", telefono: fila.Telefono || "N/A", direccion: fila.Direccion || "N/A", cantidad_bolsas: parseInt(fila.Cantidad), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Excel" }); } }
-                inputExcel.value = ""; alert("✅ Importación exitosa.");
-            }; lector.readAsArrayBuffer(archivo);
+        // --- PEDIDOS Y EDICIÓN DE PEDIDO ---
+        // NUEVA FUNCIÓN: Abrir modal para editar un pedido específico
+        const modalEditarPedido = document.getElementById('modalEditarPedido');
+        document.getElementById('btnCerrarModalEditar').addEventListener('click', () => modalEditarPedido.style.display = 'none');
+
+        window.abrirEditarPedido = function(id, cantidadActual, precioActual) {
+            document.getElementById('editPedidoId').value = id;
+            document.getElementById('editCantidad').value = cantidadActual;
+            document.getElementById('editPrecio').value = precioActual;
+            modalEditarPedido.style.display = 'flex';
+        }
+
+        document.getElementById('formEditarPedido').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const idPedido = document.getElementById('editPedidoId').value;
+            const nuevaCantidad = parseInt(document.getElementById('editCantidad').value);
+            const nuevoPrecio = parseInt(document.getElementById('editPrecio').value);
+
+            // Guardamos el cambio. "precio_personalizado" anulará el precio del directorio para este pedido.
+            await updateDoc(doc(db, "pedidos", idPedido), {
+                cantidad_bolsas: nuevaCantidad,
+                precio_personalizado: nuevoPrecio
+            });
+
+            modalEditarPedido.style.display = 'none';
         });
 
         function cargarPedidos() {
@@ -374,7 +370,9 @@
                 snapshot.forEach((docPed) => {
                     const p = docPed.data(); conteoPedidos++;
                     const nombreBuscado = (p.negocio || "").trim().toLowerCase();
-                    const precioAplicado = directorioPrecios[nombreBuscado] || 2900; 
+                    
+                    // EL CEREBRO: Si el pedido tiene un "precio_personalizado", lo usa. Si no, busca en el directorio. Si no, 2900.
+                    const precioAplicado = p.precio_personalizado || directorioPrecios[nombreBuscado] || 2900; 
                     const totalPedido = p.cantidad_bolsas * precioAplicado;
 
                     if (p.estado === "Pendiente") { sumaBolsasPendientes += p.cantidad_bolsas; } 
@@ -382,21 +380,32 @@
                     
                     const fechaF = new Date(p.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
                     let clase = p.estado === 'Entregado' ? 'entregado' : p.estado === 'Cancelado' ? 'cancelado' : 'pendiente';
-                    let estiloPrecio = (!directorioPrecios[nombreBuscado]) ? "color: #fd7e14;" : "color: #333;";
+                    
+                    // Visuales para el precio
+                    let estiloPrecio = "";
+                    let alertaPrecio = "";
+                    if (p.precio_personalizado) {
+                        estiloPrecio = "color: #17a2b8; font-weight: bold;"; // Azul para indicar que es un precio editado a mano
+                        alertaPrecio = " <span title='Promoción/Precio Editado Manualmente'>🌟</span>";
+                    } else if (!directorioPrecios[nombreBuscado]) {
+                        estiloPrecio = "color: #fd7e14;"; // Naranja si no está en el directorio
+                        alertaPrecio = " <span title='Cliente no registrado. Usando precio estándar.'>⚠️</span>";
+                    }
 
-                    // ALERTA: Nuevo botón "btn-factura" añadido en las acciones
                     cuerpoP.innerHTML += `<tr>
                         <td><small>${fechaF}</small></td>
                         <td><strong>${p.negocio || 'N/A'}</strong></td>
-                        <td style="${estiloPrecio}">$${precioAplicado.toLocaleString('es-CO')}</td>
+                        <td style="${estiloPrecio}">$${precioAplicado.toLocaleString('es-CO')}${alertaPrecio}</td>
                         <td><strong>${p.cantidad_bolsas}</strong></td>
                         <td style="color: #28a745; font-weight: bold;">$${totalPedido.toLocaleString('es-CO')}</td>
                         <td><span class="estado ${clase}">${p.estado}</span></td>
                         <td class="no-print"><div class="acciones-grid">
                             <button class="btn-factura" onclick="imprimirFactura('${p.negocio || 'N/A'}', '${p.direccion || 'N/A'}', '${fechaF}', ${p.cantidad_bolsas}, ${precioAplicado}, ${totalPedido})" title="Imprimir / PDF">📄</button>
-                            <button class="btn-accion btn-entregar" onclick="cambiarEstado('${docPed.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>✔️</button>
-                            <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${docPed.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''}>❌</button>
-                            <button class="btn-accion btn-borrar" onclick="borrarPedido('${docPed.id}')">🗑️</button>
+                            <button class="btn-accion btn-editar" onclick="abrirEditarPedido('${docPed.id}', ${p.cantidad_bolsas}, ${precioAplicado})" ${p.estado !== 'Pendiente' ? 'disabled' : ''} title="Editar Cantidad o Precio">✏️</button>
+                            
+                            <button class="btn-accion btn-entregar" onclick="cambiarEstado('${docPed.id}', 'Entregado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''} title="Marcar Entregado">✔️</button>
+                            <button class="btn-accion btn-cancelar" onclick="cambiarEstado('${docPed.id}', 'Cancelado')" ${p.estado !== 'Pendiente' ? 'disabled' : ''} title="Cancelar">❌</button>
+                            <button class="btn-accion btn-borrar" onclick="borrarPedido('${docPed.id}')" title="Eliminar Base de datos">🗑️</button>
                         </div></td>
                     </tr>`;
                 });
@@ -409,9 +418,12 @@
             });
         }
 
-        // --- INVENTARIO ---
-        const refInventario = doc(db, "bodega", "insumos_principales");
-        async function cargarInventario() { onSnapshot(refInventario, async (docSnap) => { if (docSnap.exists()) { inventarioActual = docSnap.data(); document.getElementById('invMaiz').innerText = inventarioActual.maiz_kg; document.getElementById('invBolsas').innerText = inventarioActual.bolsas_unidades; document.getElementById('invSoda').innerText = inventarioActual.soda_kg !== undefined ? inventarioActual.soda_kg : "0"; } else { await setDoc(refInventario, { maiz_kg: 500, bolsas_unidades: 3000, soda_kg: 10 }); } }); }
+        // --- IMPORTAR EXCEL ---
+        const inputExcel = document.getElementById('inputExcel'); document.getElementById('btnImportarExcel').addEventListener('click', () => inputExcel.click());
+        inputExcel.addEventListener('change', (e) => { const archivo = e.target.files[0]; if (!archivo) return; const lector = new FileReader(); lector.onload = async (evento) => { const filasJson = window.XLSX.utils.sheet_to_json(window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).Sheets[window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'}).SheetNames[0]]); for (let fila of filasJson) { if (fila.Negocio && fila.Cantidad) { await addDoc(collection(db, "pedidos"), { negocio: fila.Negocio.trim(), correo: "Importado", telefono: fila.Telefono || "N/A", direccion: fila.Direccion || "N/A", cantidad_bolsas: parseInt(fila.Cantidad), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Excel" }); } } inputExcel.value = ""; alert("✅ Importación exitosa."); }; lector.readAsArrayBuffer(archivo); });
+
+        // --- INVENTARIO Y OTROS MODALES ---
+        const refInventario = doc(db, "bodega", "insumos_principales"); async function cargarInventario() { onSnapshot(refInventario, async (docSnap) => { if (docSnap.exists()) { inventarioActual = docSnap.data(); document.getElementById('invMaiz').innerText = inventarioActual.maiz_kg; document.getElementById('invBolsas').innerText = inventarioActual.bolsas_unidades; document.getElementById('invSoda').innerText = inventarioActual.soda_kg !== undefined ? inventarioActual.soda_kg : "0"; } else { await setDoc(refInventario, { maiz_kg: 500, bolsas_unidades: 3000, soda_kg: 10 }); } }); }
         
         const modalAjuste = document.getElementById('modalAjuste'); document.getElementById('btnAbrirModalAjuste').addEventListener('click', () => { document.getElementById('ajusteMaiz').value = inventarioActual.maiz_kg || 0; document.getElementById('ajusteBolsas').value = inventarioActual.bolsas_unidades || 0; document.getElementById('ajusteSoda').value = inventarioActual.soda_kg || 0; modalAjuste.style.display = 'flex'; }); document.getElementById('btnCerrarModalAjuste').addEventListener('click', () => modalAjuste.style.display = 'none'); document.getElementById('formAjuste').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(refInventario, { maiz_kg: parseFloat(document.getElementById('ajusteMaiz').value), bolsas_unidades: parseInt(document.getElementById('ajusteBolsas').value), soda_kg: parseFloat(document.getElementById('ajusteSoda').value) }); modalAjuste.style.display = 'none'; });
         const modalCocina = document.getElementById('modalCocina'); document.getElementById('btnAbrirModalCocina').addEventListener('click', () => modalCocina.style.display = 'flex'); document.getElementById('btnCerrarModalCocina').addEventListener('click', () => modalCocina.style.display = 'none'); document.getElementById('formCocina').addEventListener('submit', async (e) => { e.preventDefault(); const ollas = parseInt(document.getElementById('ollasCocinadas').value); if(confirm(`Descontar insumos para ${ollas} olla(s)?`)) { await updateDoc(refInventario, { maiz_kg: increment(-(ollas * 25)), bolsas_unidades: increment(-(ollas * 160)), soda_kg: increment(-(ollas * 0.5)) }); modalCocina.style.display = 'none'; document.getElementById('formCocina').reset(); } });
