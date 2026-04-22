@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Privado - Mazamorra La Original</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
         
@@ -89,6 +91,11 @@
         .grupo-form input, .grupo-form select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         .btn-guardar-manual { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
+        /* Estilos del Dashboard Abajo */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; margin-top: 20px; margin-bottom: 50px; }
+        .chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .chart-container h3 { margin-top: 0; font-size: 15px; color: #444; text-align: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+
         #plantilla-factura { display: none; } 
         @media print {
             .no-print, #pantalla-dashboard, #pantalla-login, .modal { display: none !important; }
@@ -151,7 +158,7 @@
                     <h2>Gestión de Ventas</h2>
                     <div class="grupo-botones-header no-print">
                         <input type="file" id="inputExcel" accept=".xlsx, .xls" style="display: none;">
-                        <button class="btn-importar" id="btnImportarExcel">📥 Importar Excel</button>
+                        <button class="btn-importar" id="btnImportarExcel">📥 Importar Excel (POS)</button>
                         <button class="btn-nuevo" id="btnAbrirModalPedido">+ Pedido Manual</button>
                     </div>
                 </div>
@@ -231,10 +238,29 @@
                 </div>
             </div>
 
-        </div>
-    </div>
+            <div class="seccion-titulo no-print" style="margin-top: 40px; border-top: 3px solid #f5b041; padding-top: 15px;">
+                <strong>📈 Panel de Control y Estadísticas (Dashboard Inteligente)</strong>
+            </div>
+            <div class="dashboard-grid no-print">
+                <div class="chart-container">
+                    <h3>📈 Tendencia de Ventas (Últimos Días)</h3>
+                    <canvas id="chartVentas"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>🏆 Top 5 Mejores Clientes</h3>
+                    <canvas id="chartClientes"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>👥 Ventas por Vendedor / Repartidor</h3>
+                    <div style="max-height: 250px; display:flex; justify-content:center;"><canvas id="chartVendedores"></canvas></div>
+                </div>
+                <div class="chart-container">
+                    <h3>⚖️ Termómetro Financiero</h3>
+                    <canvas id="chartFinanzas"></canvas>
+                </div>
+            </div>
 
-    <div id="plantilla-factura">
+        </div> </div> <div id="plantilla-factura">
         <div class="fac-header"><h1>🌽 Mazamorra La Original</h1><p>Manizales, Colombia</p><h2>FACTURA DE VENTA</h2></div>
         <div class="fac-info"><p><strong>FECHA:</strong> <span id="facFecha"></span></p><p><strong>CLIENTE:</strong> <span id="facCliente"></span></p></div>
         <table class="fac-tabla"><thead><tr><th>Descripción</th><th style="text-align: right;">Cant</th><th style="text-align: right;">V. Unit</th><th style="text-align: right;">Subtotal</th></tr></thead>
@@ -287,12 +313,12 @@
 
         // ⚠️ PEGA TUS LLAVES DE FIREBASE AQUÍ ⚠️
         const firebaseConfig = {
-              apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
-  authDomain: "pedidos-mazamorra.firebaseapp.com",
-  projectId: "pedidos-mazamorra",
-  storageBucket: "pedidos-mazamorra.firebasestorage.app",
-  messagingSenderId: "845900639474",
-  appId: "1:845900639474:web:f2dc79841165e7f991b46b"
+            apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
+            authDomain: "pedidos-mazamorra.firebaseapp.com",
+            projectId: "pedidos-mazamorra",
+            storageBucket: "pedidos-mazamorra.firebasestorage.app",
+            messagingSenderId: "845900639474",
+            appId: "1:845900639474:web:f2dc79841165e7f991b46b"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -303,18 +329,23 @@
         let costosActuales = {}; 
         let capitalTotalBodega = 0; 
         
+        // Arrays globales expandidos para los Dashboards
         let listaIngresosGlobal = []; 
         let listaGastosGlobal = [];   
         let directorioPrecios = {}; 
+        
+        // Variables para los gráficos
+        let chartVentas, chartClientes, chartVendedores, chartFinanzas;
+        let timerDashboard; // Para que no se redibuje mil veces al cargar
 
         // --- FUNCIONES GLOBALES ---
         window.imprimirFactura = function(negocio, fecha, cantidad, precio, total) { document.getElementById('facCliente').innerText = negocio; document.getElementById('facFecha').innerText = fecha; document.getElementById('facCant').innerText = cantidad; document.getElementById('facUnit').innerText = "$" + precio.toLocaleString('es-CO'); document.getElementById('facSub').innerText = "$" + total.toLocaleString('es-CO'); document.getElementById('facTotal').innerText = "$" + total.toLocaleString('es-CO'); window.print(); }
         
         window.exportarBalanceFinanciero = function() {
             if (listaIngresosGlobal.length === 0 && listaGastosGlobal.length === 0) { alert("No hay datos financieros."); return; }
-            let wb = window.XLSX.utils.book_new(); let wsIngresos = window.XLSX.utils.json_to_sheet(listaIngresosGlobal); let wsGastos = window.XLSX.utils.json_to_sheet(listaGastosGlobal);
+            let wb = window.XLSX.utils.book_new(); let wsIngresos = window.XLSX.utils.json_to_sheet(listaIngresosGlobal.map(i => ({Fecha: i.FechaStr, Negocio: i.Negocio, Vendedor: i.Vendedor, Bolsas: i.Bolsas, Ingreso: i.Ingreso}))); 
+            let wsGastos = window.XLSX.utils.json_to_sheet(listaGastosGlobal);
             let totalIn = listaIngresosGlobal.reduce((sum, item) => sum + item.Ingreso, 0); 
-            // Solo cuenta egresos pagados en el Excel
             let totalOut = listaGastosGlobal.filter(g => g.Estado === 'Pagado').reduce((sum, item) => sum + item.Monto, 0);
             
             let wsResumen = window.XLSX.utils.json_to_sheet([
@@ -380,13 +411,12 @@
         document.getElementById('formAjuste').addEventListener('submit', async (e) => { e.preventDefault(); let nuevasCantidades = {}; let nuevosCostos = {}; for (const n of Object.keys(inventarioActual)) { nuevasCantidades[n] = parseFloat(document.getElementById(`ajustecant_${n}`).value); nuevosCostos[n] = parseFloat(document.getElementById(`ajustecosto_${n}`).value); } await updateDoc(refInventario, nuevasCantidades); await updateDoc(refCostos, nuevosCostos); modalAjuste.style.display = 'none'; });
         window.eliminarInsumo = async function(nombre) { if(confirm(`¿Estás seguro de ELIMINAR el insumo "${nombre}" por completo?`)) { await updateDoc(refInventario, { [nombre]: deleteField() }); await updateDoc(refCostos, { [nombre]: deleteField() }); modalAjuste.style.display = 'none'; document.getElementById('btnAbrirModalAjuste').click(); } }
 
-        // PRODUCCIÓN (Corregida para que busque inteligentemente la llave sin importar como se llame)
+        // PRODUCCIÓN 
         const modalCocina = document.getElementById('modalCocina'); document.getElementById('btnAbrirModalCocina').addEventListener('click', () => { document.getElementById('ollasCocinadas').value = parseInt(document.getElementById('planOllas').innerText) || 1; modalCocina.style.display = 'flex'; }); document.getElementById('btnCerrarModalCocina').addEventListener('click', () => modalCocina.style.display = 'none');
         document.getElementById('formCocina').addEventListener('submit', async (e) => { 
             e.preventDefault(); const ollas = parseInt(document.getElementById('ollasCocinadas').value); 
             if(confirm(`Se descontarán insumos para ${ollas} olla(s). ¿Continuar?`)) { 
                 let desc = {}; 
-                // Busca dinámicamente las llaves correctas en tu base de datos
                 const llaves = Object.keys(inventarioActual);
                 const llaveMaiz = llaves.find(k => k.toLowerCase().includes('maiz') || k.toLowerCase().includes('maíz'));
                 const llaveBolsas = llaves.find(k => k.toLowerCase().includes('bolsa'));
@@ -409,8 +439,6 @@
         window.abrirEditarGasto = function(id, concepto, monto) { document.getElementById('editGasId').value = id; document.getElementById('editGasConcepto').value = concepto; document.getElementById('editGasValor').value = monto; modalEditarGasto.style.display = 'flex'; }
         document.getElementById('formEditarGasto').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "gastos", document.getElementById('editGasId').value), { concepto: document.getElementById('editGasConcepto').value, monto: parseInt(document.getElementById('editGasValor').value) }); modalEditarGasto.style.display = 'none'; });
         window.borrarGasto = async (id) => { if(confirm("¿Eliminar este registro?")) await deleteDoc(doc(db, "gastos", id)); }
-        
-        // NUEVA FUNCIÓN: Pagar un gasto pendiente
         window.pagarGastoPendiente = async (id) => { if(confirm("¿Confirmar que ya pagaste este dinero (Saldar deuda)?")) await updateDoc(doc(db, "gastos", id), { estado: 'Pagado' }); }
 
         function cargarGastos() { 
@@ -418,21 +446,20 @@
                 const cuerpoG = document.getElementById('cuerpoTablaGastos'); cuerpoG.innerHTML = ''; 
                 let totalEgresosPagados = 0; listaGastosGlobal = []; 
                 snapshot.forEach((docG) => { 
-                    const g = docG.data(); 
-                    const estadoGasto = g.estado || 'Pagado'; // Por defecto antiguo
-                    
-                    // Solo suma al P&G si ya fue pagado
+                    const g = docG.data(); const estadoGasto = g.estado || 'Pagado'; 
                     if (estadoGasto === 'Pagado') { totalEgresosPagados += g.monto; }
 
                     const fechaF = new Date(g.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short' }); 
                     listaGastosGlobal.push({ Fecha: fechaF, Concepto: g.concepto, Monto: g.monto, Estado: estadoGasto }); 
                     
                     let btnPagar = estadoGasto === 'Pendiente' ? `<button class="estado pagar" onclick="pagarGastoPendiente('${docG.id}')">💲 Pagar Ahora</button>` : `<span class="estado entregado">Ya Pagado</span>`;
-
                     cuerpoG.innerHTML += `<tr><td>${fechaF}</td><td><strong>${g.concepto}</strong></td><td style="color: #dc3545; font-weight:bold;">$${g.monto.toLocaleString('es-CO')}</td><td>${btnPagar}</td><td class="no-print"><div class="acciones-grid"><button class="btn-accion btn-editar" onclick="abrirEditarGasto('${docG.id}', '${g.concepto.replace(/'/g, "\\'")}', ${g.monto})">✏️</button><button class="btn-accion btn-borrar" onclick="borrarGasto('${docG.id}')">🗑️</button></div></td></tr>`; 
                 }); 
                 document.getElementById('totalEgresos').innerText = "-$" + totalEgresosPagados.toLocaleString('es-CO'); 
                 if(snapshot.empty) cuerpoG.innerHTML = '<tr><td colspan="5" style="text-align: center;">Sin registros.</td></tr>'; 
+                
+                // Actualiza gráficos tras cargar gastos
+                clearTimeout(timerDashboard); timerDashboard = setTimeout(dibujarDashboards, 500);
             }); 
         }
 
@@ -476,8 +503,25 @@
                 onSnapshot(query(collection(db, "pedidos"), orderBy("fecha", "desc")), (snapshot) => {
                     const cuerpoP = document.getElementById('cuerpoTablaPedidos'); cuerpoP.innerHTML = ''; let sumBolsas = 0, sumIngresos = 0; listaIngresosGlobal = []; 
                     snapshot.forEach((docPed) => {
-                        const p = docPed.data(); const precioAp = p.precio_personalizado || directorioPrecios[(p.negocio || "").trim().toLowerCase()] || 2900; const totalP = p.cantidad_bolsas * precioAp;
-                        if (p.estado === "Pendiente") { sumBolsas += p.cantidad_bolsas; } else if (p.estado === "Entregado") { sumIngresos += totalP; listaIngresosGlobal.push({ Fecha: new Date(p.fecha).toLocaleDateString('es-CO'), Negocio: p.negocio, Bolsas: p.cantidad_bolsas, Ingreso: totalP }); }
+                        const p = docPed.data(); 
+                        const precioAp = p.precio_personalizado || directorioPrecios[(p.negocio || "").trim().toLowerCase()] || 2900; 
+                        
+                        // IMPORTANTE: Respeta el valor del POS de Excel si existe, sino lo calcula manual
+                        const totalP = p.total_pagar || (p.cantidad_bolsas * precioAp);
+                        
+                        if (p.estado === "Pendiente") { sumBolsas += p.cantidad_bolsas; } 
+                        else if (p.estado === "Entregado") { 
+                            sumIngresos += totalP; 
+                            listaIngresosGlobal.push({ 
+                                FechaStr: new Date(p.fecha).toLocaleDateString('es-CO'), 
+                                RawDate: new Date(p.fecha),
+                                Negocio: p.negocio || 'Cliente General', 
+                                Bolsas: p.cantidad_bolsas, 
+                                Ingreso: totalP,
+                                Vendedor: p.vendedor || 'Vendedor General' // Captura el vendedor de Excel
+                            }); 
+                        }
+
                         const fechaF = new Date(p.fecha).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit' });
                         let clase = p.estado === 'Entregado' ? 'entregado' : p.estado === 'Cancelado' ? 'cancelado' : 'pendiente';
                         let estPrec = p.precio_personalizado ? "color: #17a2b8; font-weight: bold;" : (!directorioPrecios[(p.negocio || "").trim().toLowerCase()] ? "color: #fd7e14;" : "");
@@ -502,13 +546,16 @@
 
                     document.getElementById('totalBolsas').innerText = sumBolsas; document.getElementById('totalIngresos').innerText = "$" + sumIngresos.toLocaleString('es-CO');
                     const ollasSug = Math.ceil(sumBolsas / 160) || 0; document.getElementById('planOllas').innerText = ollasSug; document.getElementById('planMaiz').innerText = (ollasSug * 25) + " kg"; document.getElementById('planBolsas').innerText = (ollasSug * 160); document.getElementById('planSoda').innerText = (ollasSug * 0.5) + " kg";
+                    
+                    // Actualiza gráficos tras cargar pedidos
+                    clearTimeout(timerDashboard); timerDashboard = setTimeout(dibujarDashboards, 500);
                 });
             });
         }
 
-// --- 5. PEDIDOS MANUALES Y EXCEL ---
+        // --- 5. PEDIDOS MANUALES Y EXCEL ---
         const modalNuevoPedido = document.getElementById('modalNuevoPedido'); document.getElementById('btnAbrirModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'flex'); document.getElementById('btnCerrarModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'none'); 
-        document.getElementById('formManual').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "pedidos"), { negocio: document.getElementById('manualNegocio').value.trim(), direccion: document.getElementById('manualDireccion').value.trim(), telefono: document.getElementById('manualTelefono').value.trim(), cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Manual" }); modalNuevoPedido.style.display = 'none'; document.getElementById('formManual').reset(); });
+        document.getElementById('formManual').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "pedidos"), { negocio: document.getElementById('manualNegocio').value.trim(), vendedor: "Administrador / Manual", direccion: document.getElementById('manualDireccion').value.trim(), telefono: document.getElementById('manualTelefono').value.trim(), cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Manual" }); modalNuevoPedido.style.display = 'none'; document.getElementById('formManual').reset(); });
         
         const inputExcel = document.getElementById('inputExcel'); document.getElementById('btnImportarExcel').addEventListener('click', () => inputExcel.click());
         inputExcel.addEventListener('change', (e) => { 
@@ -546,10 +593,8 @@
             lector.readAsArrayBuffer(archivo); 
         });
 
-        // AQUÍ ESTÁN LAS DOS FUNCIONES QUE FALTABAN:
         window.cambiarEstado = async (id, estado) => { if(confirm(`¿Confirmar ${estado}?`)) await updateDoc(doc(db, "pedidos", id), { estado }); }
         window.borrarPedido = async (id) => { if(confirm("¿Eliminar pedido?")) await deleteDoc(doc(db, "pedidos", id)); }
-
 
         // --- AUTOMATIZACIÓN DE ENTREGAS ---
         const modalConfirmarEntrega = document.getElementById('modalConfirmarEntrega'); document.getElementById('btnCerrarModalEntrega').addEventListener('click', () => modalConfirmarEntrega.style.display = 'none');
@@ -557,17 +602,90 @@
         document.getElementById('formConfirmarEntrega').addEventListener('submit', async (e) => {
             e.preventDefault(); const id = document.getElementById('entregaPedidoId').value; const negocio = document.getElementById('entregaNegocio').value; const empleado = document.getElementById('entregaEmpleado').value; const pago = parseInt(document.getElementById('entregaPago').value);
             await updateDoc(doc(db, "pedidos", id), { estado: 'Entregado' }); // Pedido a ingresos
-            if(pago > 0) { await addDoc(collection(db, "gastos"), { concepto: `Pago a ${empleado} por entrega a ${negocio}`, monto: pago, fecha: new Date().toISOString(), estado: 'Pendiente' }); } // Pago a Cuentas por Pagar
+            if(pago > 0) { await addDoc(collection(db, "gastos"), { concepto: `Pago a ${empleado} por entrega a ${negocio}`, monto: pago, fecha: new Date().toISOString(), estado: 'Pendiente' }); } 
             modalConfirmarEntrega.style.display = 'none'; document.getElementById('formConfirmarEntrega').reset();
         });
 
-        // --- 6. CALCULADORA (EDITAR PEDIDO) ---
+        // --- CALCULADORA (EDITAR PEDIDO) ---
         const modalEditarPedido = document.getElementById('modalEditarPedido'); document.getElementById('btnCerrarModalEditar').addEventListener('click', () => modalEditarPedido.style.display = 'none');
         const inputEditCant = document.getElementById('editCantidad'); const inputEditPrecio = document.getElementById('editPrecio'); const divTotalDinamico = document.getElementById('editTotalDinamico');
         function actualizarCalculadora() { divTotalDinamico.innerText = "$" + ((parseInt(inputEditCant.value) || 0) * (parseInt(inputEditPrecio.value) || 0)).toLocaleString('es-CO'); }
         inputEditCant.addEventListener('input', actualizarCalculadora); inputEditPrecio.addEventListener('input', actualizarCalculadora);
         window.abrirEditarPedido = function(id, cantidad, precio) { document.getElementById('editPedidoId').value = id; inputEditCant.value = cantidad; inputEditPrecio.value = precio; actualizarCalculadora(); modalEditarPedido.style.display = 'flex'; }
         document.getElementById('formEditarPedido').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "pedidos", document.getElementById('editPedidoId').value), { cantidad_bolsas: parseInt(inputEditCant.value), precio_personalizado: parseInt(inputEditPrecio.value) }); modalEditarPedido.style.display = 'none'; });
+
+        // --- 6. MOTOR DE BUSINESS INTELLIGENCE (NUEVO) ---
+        function dibujarDashboards() {
+            // Destruimos gráficos viejos si existen para poder redibujarlos
+            if(chartVentas) chartVentas.destroy();
+            if(chartClientes) chartClientes.destroy();
+            if(chartVendedores) chartVendedores.destroy();
+            if(chartFinanzas) chartFinanzas.destroy();
+
+            // Colores Corporativos
+            const cPrimary = '#f5b041'; const cGreen = '#28a745'; const cRed = '#dc3545'; const cInfo = '#17a2b8'; const cPurple = '#6f42c1';
+
+            // 1. Lógica: Ventas Diarias (Agrupar por Fecha)
+            let datosVentasDia = {};
+            // Ordenamos por fecha real (de la más vieja a la más nueva)
+            [...listaIngresosGlobal].sort((a,b) => a.RawDate - b.RawDate).forEach(item => {
+                datosVentasDia[item.FechaStr] = (datosVentasDia[item.FechaStr] || 0) + item.Ingreso;
+            });
+
+            // 2. Lógica: Top Clientes (Agrupar y Ordenar Mayor a Menor)
+            let datosClientes = {};
+            listaIngresosGlobal.forEach(i => datosClientes[i.Negocio] = (datosClientes[i.Negocio] || 0) + i.Ingreso);
+            let topClientes = Object.entries(datosClientes).sort((a,b) => b[1] - a[1]).slice(0, 5); // Solo los 5 mejores
+
+            // 3. Lógica: Vendedores (Agrupar por Vendedor)
+            let datosVendedores = {};
+            listaIngresosGlobal.forEach(i => datosVendedores[i.Vendedor] = (datosVendedores[i.Vendedor] || 0) + i.Ingreso);
+
+            // 4. Lógica: Finanzas
+            let totIngresos = listaIngresosGlobal.reduce((sum, i) => sum + i.Ingreso, 0);
+            let totGastos = listaGastosGlobal.filter(g => g.Estado === 'Pagado').reduce((sum, g) => sum + g.Monto, 0);
+
+
+            // --- DIBUJAR GRÁFICA 1: Tendencia ---
+            chartVentas = new Chart(document.getElementById('chartVentas').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: Object.keys(datosVentasDia),
+                    datasets: [{ label: 'Ventas Diarias ($)', data: Object.values(datosVentasDia), borderColor: cPrimary, backgroundColor: 'rgba(245, 176, 65, 0.2)', borderWidth: 3, fill: true, tension: 0.3 }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            // --- DIBUJAR GRÁFICA 2: Top Clientes ---
+            chartClientes = new Chart(document.getElementById('chartClientes').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: topClientes.map(c => c[0].substring(0,15) + '...'), // Corta nombres muy largos
+                    datasets: [{ label: 'Compras Totales ($)', data: topClientes.map(c => c[1]), backgroundColor: cInfo, borderRadius: 5 }]
+                },
+                options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            // --- DIBUJAR GRÁFICA 3: Vendedores ---
+            chartVendedores = new Chart(document.getElementById('chartVendedores').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(datosVendedores),
+                    datasets: [{ data: Object.values(datosVendedores), backgroundColor: [cPrimary, cInfo, cGreen, cPurple, '#e83e8c', '#fd7e14'], borderWidth: 0 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            // --- DIBUJAR GRÁFICA 4: Finanzas ---
+            chartFinanzas = new Chart(document.getElementById('chartFinanzas').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Ingresos Netos', 'Gastos Efectivos'],
+                    datasets: [{ label: 'Valor ($)', data: [totIngresos, totGastos], backgroundColor: [cGreen, cRed], borderRadius: 5 }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
 
     </script>
 </body>
