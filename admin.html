@@ -506,50 +506,51 @@
             });
         }
 
-        // --- 5. PEDIDOS MANUALES Y EXCEL ---
+// --- 5. PEDIDOS MANUALES Y EXCEL ---
         const modalNuevoPedido = document.getElementById('modalNuevoPedido'); document.getElementById('btnAbrirModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'flex'); document.getElementById('btnCerrarModalPedido').addEventListener('click', () => modalNuevoPedido.style.display = 'none'); 
         document.getElementById('formManual').addEventListener('submit', async (e) => { e.preventDefault(); await addDoc(collection(db, "pedidos"), { negocio: document.getElementById('manualNegocio').value.trim(), direccion: document.getElementById('manualDireccion').value.trim(), telefono: document.getElementById('manualTelefono').value.trim(), cantidad_bolsas: parseInt(document.getElementById('manualBolsas').value), fecha: new Date().toISOString(), estado: "Pendiente", origen: "Manual" }); modalNuevoPedido.style.display = 'none'; document.getElementById('formManual').reset(); });
         
         const inputExcel = document.getElementById('inputExcel'); document.getElementById('btnImportarExcel').addEventListener('click', () => inputExcel.click());
-inputExcel.addEventListener('change', (e) => { 
-    const archivo = e.target.files[0]; 
-    if (!archivo) return; 
-    
-    const lector = new FileReader(); 
-    lector.onload = async (evento) => { 
-        const workbook = window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'});
-        const filasJson = window.XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); 
-        
-        let importados = 0;
-        for (let fila of filasJson) { 
-            // Validamos que la fila tenga el dato clave (Nombre del cliente)
-            if (fila["NOMBRE RECEPTOR"]) { 
+        inputExcel.addEventListener('change', (e) => { 
+            const archivo = e.target.files[0]; 
+            if (!archivo) return; 
+            
+            const lector = new FileReader(); 
+            lector.onload = async (evento) => { 
+                const workbook = window.XLSX.read(new Uint8Array(evento.target.result), {type: 'array'});
+                const filasJson = window.XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); 
                 
-                // NOTA: Como el Excel no dice cuántas bolsas son, calculamos la cantidad
-                // dividiendo el Total entre el precio (ej. 2900). 
-                // O si tienes otra columna para cantidad, se cambia aquí.
-                const totalFactura = parseInt(fila["TOTAL A PAGAR"]) || 0;
-                let bolsasCalculadas = Math.floor(totalFactura / 2900); 
-                if (bolsasCalculadas === 0) bolsasCalculadas = 1; // Para evitar pedidos en 0
+                let importados = 0;
+                for (let fila of filasJson) { 
+                    if (fila["NOMBRE RECEPTOR"]) { 
+                        const totalFactura = parseInt(fila["TOTAL A PAGAR"]) || 0;
+                        let bolsasCalculadas = Math.floor(totalFactura / 2900); 
+                        if (bolsasCalculadas === 0) bolsasCalculadas = 1;
 
-                await addDoc(collection(db, "pedidos"), { 
-                    negocio: fila["NOMBRE RECEPTOR"].trim(), 
-                    vendedor: fila["USUARIO"] || "Sin asignar",
-                    telefono: "N/A", // El excel no tiene teléfono
-                    cantidad_bolsas: bolsasCalculadas, 
-                    total_pagar: totalFactura,
-                    fecha: fila["FECHA DE CREACIÓN"] || new Date().toISOString(), 
-                    estado: "Entregado", // Asumimos que si está facturado, ya se entregó
-                    origen: "Reporte POS" 
-                }); 
-                importados++;
-            } 
-        } 
-        inputExcel.value = ""; 
-        alert(`✅ Se importaron ${importados} registros exitosamente.`); 
-    }; 
-    lector.readAsArrayBuffer(archivo); 
-});
+                        await addDoc(collection(db, "pedidos"), { 
+                            negocio: fila["NOMBRE RECEPTOR"].trim(), 
+                            vendedor: fila["USUARIO"] || "Sin asignar",
+                            telefono: "N/A", 
+                            cantidad_bolsas: bolsasCalculadas, 
+                            total_pagar: totalFactura,
+                            fecha: fila["FECHA DE CREACIÓN"] || new Date().toISOString(), 
+                            estado: "Entregado", 
+                            origen: "Reporte POS" 
+                        }); 
+                        importados++;
+                    } 
+                } 
+                inputExcel.value = ""; 
+                alert(`✅ Se importaron ${importados} registros exitosamente.`); 
+            }; 
+            lector.readAsArrayBuffer(archivo); 
+        });
+
+        // AQUÍ ESTÁN LAS DOS FUNCIONES QUE FALTABAN:
+        window.cambiarEstado = async (id, estado) => { if(confirm(`¿Confirmar ${estado}?`)) await updateDoc(doc(db, "pedidos", id), { estado }); }
+        window.borrarPedido = async (id) => { if(confirm("¿Eliminar pedido?")) await deleteDoc(doc(db, "pedidos", id)); }
+
+
         // --- AUTOMATIZACIÓN DE ENTREGAS ---
         const modalConfirmarEntrega = document.getElementById('modalConfirmarEntrega'); document.getElementById('btnCerrarModalEntrega').addEventListener('click', () => modalConfirmarEntrega.style.display = 'none');
         window.abrirModalEntrega = function(id, negocio) { document.getElementById('entregaPedidoId').value = id; document.getElementById('entregaNegocio').value = negocio; document.getElementById('entregaPago').value = 0; modalConfirmarEntrega.style.display = 'flex'; }
