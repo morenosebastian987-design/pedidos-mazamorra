@@ -243,15 +243,19 @@
             </div>
             <div class="dashboard-grid no-print">
                 <div class="chart-container">
-                    <h3>📈 Tendencia de Ventas (Últimos Días)</h3>
+                    <h3>🛍️ Bolsas Vendidas por Día (Volumen)</h3>
+                    <canvas id="chartBolsasDia"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>📈 Tendencia de Ingresos ($ por Día)</h3>
                     <canvas id="chartVentas"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>🏆 Top 5 Mejores Clientes</h3>
+                    <h3>🏆 Top 5 Mejores Clientes (Ingresos)</h3>
                     <canvas id="chartClientes"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h3>👥 Ventas por Vendedor / Repartidor</h3>
+                    <h3>👥 Ventas por Repartidor/Vendedor</h3>
                     <div style="max-height: 250px; display:flex; justify-content:center;"><canvas id="chartVendedores"></canvas></div>
                 </div>
                 <div class="chart-container">
@@ -311,7 +315,7 @@
         import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, orderBy, addDoc, setDoc, increment, getDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // ⚠️ PEGA TUS LLAVES DE FIREBASE AQUÍ ⚠️
+        // TUS LLAVES EXACTAS DE FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyAsUyKFTIE8BO6cC1HNJNx7ySfDOVCLOH8",
             authDomain: "pedidos-mazamorra.firebaseapp.com",
@@ -335,8 +339,8 @@
         let directorioPrecios = {}; 
         
         // Variables para los gráficos
-        let chartVentas, chartClientes, chartVendedores, chartFinanzas;
-        let timerDashboard; // Para que no se redibuje mil veces al cargar
+        let chartBolsasDia, chartVentas, chartClientes, chartVendedores, chartFinanzas;
+        let timerDashboard; 
 
         // --- FUNCIONES GLOBALES ---
         window.imprimirFactura = function(negocio, fecha, cantidad, precio, total) { document.getElementById('facCliente').innerText = negocio; document.getElementById('facFecha').innerText = fecha; document.getElementById('facCant').innerText = cantidad; document.getElementById('facUnit').innerText = "$" + precio.toLocaleString('es-CO'); document.getElementById('facSub').innerText = "$" + total.toLocaleString('es-CO'); document.getElementById('facTotal').innerText = "$" + total.toLocaleString('es-CO'); window.print(); }
@@ -506,7 +510,6 @@
                         const p = docPed.data(); 
                         const precioAp = p.precio_personalizado || directorioPrecios[(p.negocio || "").trim().toLowerCase()] || 2900; 
                         
-                        // IMPORTANTE: Respeta el valor del POS de Excel si existe, sino lo calcula manual
                         const totalP = p.total_pagar || (p.cantidad_bolsas * precioAp);
                         
                         if (p.estado === "Pendiente") { sumBolsas += p.cantidad_bolsas; } 
@@ -518,7 +521,7 @@
                                 Negocio: p.negocio || 'Cliente General', 
                                 Bolsas: p.cantidad_bolsas, 
                                 Ingreso: totalP,
-                                Vendedor: p.vendedor || 'Vendedor General' // Captura el vendedor de Excel
+                                Vendedor: p.vendedor || 'Vendedor General' 
                             }); 
                         }
 
@@ -614,9 +617,10 @@
         window.abrirEditarPedido = function(id, cantidad, precio) { document.getElementById('editPedidoId').value = id; inputEditCant.value = cantidad; inputEditPrecio.value = precio; actualizarCalculadora(); modalEditarPedido.style.display = 'flex'; }
         document.getElementById('formEditarPedido').addEventListener('submit', async (e) => { e.preventDefault(); await updateDoc(doc(db, "pedidos", document.getElementById('editPedidoId').value), { cantidad_bolsas: parseInt(inputEditCant.value), precio_personalizado: parseInt(inputEditPrecio.value) }); modalEditarPedido.style.display = 'none'; });
 
-        // --- 6. MOTOR DE BUSINESS INTELLIGENCE (NUEVO) ---
+        // --- 6. MOTOR DE BUSINESS INTELLIGENCE (NUEVO CON BOLSAS POR DÍA) ---
         function dibujarDashboards() {
-            // Destruimos gráficos viejos si existen para poder redibujarlos
+            // Destruimos gráficos viejos si existen
+            if(chartBolsasDia) chartBolsasDia.destroy();
             if(chartVentas) chartVentas.destroy();
             if(chartClientes) chartClientes.destroy();
             if(chartVendedores) chartVendedores.destroy();
@@ -625,19 +629,21 @@
             // Colores Corporativos
             const cPrimary = '#f5b041'; const cGreen = '#28a745'; const cRed = '#dc3545'; const cInfo = '#17a2b8'; const cPurple = '#6f42c1';
 
-            // 1. Lógica: Ventas Diarias (Agrupar por Fecha)
+            // 1. Lógica: Dinero Diario y BOLSAS DIARIAS
             let datosVentasDia = {};
-            // Ordenamos por fecha real (de la más vieja a la más nueva)
+            let datosBolsasDia = {}; 
+
             [...listaIngresosGlobal].sort((a,b) => a.RawDate - b.RawDate).forEach(item => {
                 datosVentasDia[item.FechaStr] = (datosVentasDia[item.FechaStr] || 0) + item.Ingreso;
+                datosBolsasDia[item.FechaStr] = (datosBolsasDia[item.FechaStr] || 0) + item.Bolsas; // Suma física
             });
 
-            // 2. Lógica: Top Clientes (Agrupar y Ordenar Mayor a Menor)
+            // 2. Lógica: Top Clientes
             let datosClientes = {};
             listaIngresosGlobal.forEach(i => datosClientes[i.Negocio] = (datosClientes[i.Negocio] || 0) + i.Ingreso);
-            let topClientes = Object.entries(datosClientes).sort((a,b) => b[1] - a[1]).slice(0, 5); // Solo los 5 mejores
+            let topClientes = Object.entries(datosClientes).sort((a,b) => b[1] - a[1]).slice(0, 5); 
 
-            // 3. Lógica: Vendedores (Agrupar por Vendedor)
+            // 3. Lógica: Vendedores 
             let datosVendedores = {};
             listaIngresosGlobal.forEach(i => datosVendedores[i.Vendedor] = (datosVendedores[i.Vendedor] || 0) + i.Ingreso);
 
@@ -646,12 +652,22 @@
             let totGastos = listaGastosGlobal.filter(g => g.Estado === 'Pagado').reduce((sum, g) => sum + g.Monto, 0);
 
 
-            // --- DIBUJAR GRÁFICA 1: Tendencia ---
+            // --- NUEVA GRÁFICA 0: BOLSAS VENDIDAS POR DÍA (VOLUMEN) ---
+            chartBolsasDia = new Chart(document.getElementById('chartBolsasDia').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(datosBolsasDia),
+                    datasets: [{ label: 'Bolsas (Unds)', data: Object.values(datosBolsasDia), backgroundColor: cPurple, borderRadius: 4 }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+
+            // --- DIBUJAR GRÁFICA 1: Tendencia Dinero ---
             chartVentas = new Chart(document.getElementById('chartVentas').getContext('2d'), {
                 type: 'line',
                 data: {
                     labels: Object.keys(datosVentasDia),
-                    datasets: [{ label: 'Ventas Diarias ($)', data: Object.values(datosVentasDia), borderColor: cPrimary, backgroundColor: 'rgba(245, 176, 65, 0.2)', borderWidth: 3, fill: true, tension: 0.3 }]
+                    datasets: [{ label: 'Ventas ($)', data: Object.values(datosVentasDia), borderColor: cPrimary, backgroundColor: 'rgba(245, 176, 65, 0.2)', borderWidth: 3, fill: true, tension: 0.3 }]
                 },
                 options: { responsive: true, plugins: { legend: { display: false } } }
             });
@@ -660,7 +676,7 @@
             chartClientes = new Chart(document.getElementById('chartClientes').getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: topClientes.map(c => c[0].substring(0,15) + '...'), // Corta nombres muy largos
+                    labels: topClientes.map(c => c[0].substring(0,15) + '...'),
                     datasets: [{ label: 'Compras Totales ($)', data: topClientes.map(c => c[1]), backgroundColor: cInfo, borderRadius: 5 }]
                 },
                 options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
